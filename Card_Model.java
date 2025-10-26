@@ -1,4 +1,4 @@
-public class Card {
+public class Card_Model {
     /**
      * Enum for the different values of Uno cards
      */
@@ -27,7 +27,7 @@ public class Card {
      * @param cardValue The value of the card (e.g., NUMBER, SKIP, REVERSE).
      * @param cardColour The colour of the card (e.g., RED, BLUE, GREEN, YELLOW, or WILD).
      */
-    public Card(CardValue cardValue, CardColour cardColour) {
+    public Card_Model(CardValue cardValue, CardColour cardColour) {
         this.VALUE = cardValue;
         this.COLOUR = cardColour;
     }
@@ -39,7 +39,7 @@ public class Card {
      */
     public CardValue getCardValue() {
 
-        return this.value;
+        return this.VALUE;
     }
 
     /**

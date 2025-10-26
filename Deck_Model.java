@@ -1,17 +1,17 @@
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Deck {
+public class Deck_Model {
 
-    private ArrayList<Card> drawPile;
+    private ArrayList<Card_Model> drawPile;
 
     private int numDrawCards;
 
     /**
      * Constructs a new Uno drawPile by creating and populating it with Uno cards.
      */
-    public Deck() {
-        drawPile = new ArrayList<Card>();
+    public Deck_Model() {
+        drawPile = new ArrayList<Card_Model>();
         makePile();
     }
 
@@ -20,7 +20,7 @@ public class Deck {
      *
      * @param cards An ArrayList of Uno cards to initialize the drawPile.
      */
-    public Deck(ArrayList<Card> cards) {
+    public Deck_Model(ArrayList<Card_Model> cards) {
         this.drawPile = cards;
         numDrawCards = cards.size();
     }
@@ -40,7 +40,7 @@ public class Deck {
      * @param i, the index of the card
      * @return the Card from the drawPile
      */
-    public Card getCard(int i) {
+    public Card_Model getCard(int i) {
         return drawPile.get(i);
     }
 
@@ -50,7 +50,7 @@ public class Deck {
      *
      * @return an ArrayList of Cards
      */
-    public ArrayList<Card> getCards() {
+    public ArrayList<Card_Model> getCards() {
         return drawPile;
     }
 
@@ -59,8 +59,8 @@ public class Deck {
      *
      * @return The drawn Uno card.
      */
-    public Card draw() {
-        Card card = drawPile.remove(0);
+    public Card_Model draw() {
+        Card_Model card = drawPile.remove(0);
         numDrawCards--;
         return card;
     }
@@ -82,19 +82,19 @@ public class Deck {
      */
     public void makePile() {
 
-        for (Card.CardColour Colour : Card.CardColour.values()) {
-            if (!Colour.equals(Card.Colour.WILD)) {
-                for (Card.CardValue Type : Card.CardValue.values()) {
-                    if (!Type.equals(Card.CardValue.WILD) && !Type.equals(Card.CardValue.WILD_DRAW_TWO)) {
-                        drawPile.add(new Card(Type, Colour));
-                        drawPile.add(new Card(Type, Colour));
+        for (Card_Model.CardColour Colour : Card_Model.CardColour.values()) {
+            if (!Colour.equals(Card_Model.CardColour.WILD)) {
+                for (Card_Model.CardValue Type : Card_Model.CardValue.values()) {
+                    if (!Type.equals(Card_Model.CardValue.WILD) && !Type.equals(Card_Model.CardValue.WILD_DRAW_TWO)) {
+                        drawPile.add(new Card_Model(Type, Colour));
+                        drawPile.add(new Card_Model(Type, Colour));
                         numDrawCards += 2;
                     }
                 }
             } else {
                 for (int i = 4; i > 0; i--) {
-                    drawPile.add(new Card(Card.CardValue.WILD, Card.CardColour.WILD));
-                    drawPile.add(new Card(Card.CardValue.WILD_DRAW_TWO, Card.CardColour.WILD));
+                    drawPile.add(new Card_Model(Card_Model.CardValue.WILD, Card_Model.CardColour.WILD));
+                    drawPile.add(new Card_Model(Card_Model.CardValue.WILD_DRAW_TWO, Card_Model.CardColour.WILD));
                     numDrawCards += 2;
                 }
 

@@ -1,18 +1,18 @@
 import java.util.ArrayList;
 
-public class Player
+public class Player_Model
 {
     private String name;
-    private ArrayList<Card> hand;
+    private ArrayList<Card_Model> hand;
     private int score;
     private int numCards;
 
     /**
      * Constructs a new player with an empty card list and a score of 0.
      */
-    public Player()
+    public Player_Model()
     {
-        hand = new ArrayList<Card>();
+        hand = new ArrayList<Card_Model>();
         numCards = 0;
         score = 0;
     }
@@ -21,7 +21,7 @@ public class Player
      * Gets list of cards in the player's hand.
      * @return ArrayList containing the player's cards.
      */
-    public ArrayList<Card> getHand()
+    public ArrayList<Card_Model> getHand()
     {
         return hand;
     }
@@ -78,7 +78,7 @@ public class Player
      * @param card
      * The card to add to the player's hand.
      */
-    public void addCard(Card card)
+    public void addCard(Card_Model card)
     {
         hand.add(card);
         numCards++;
@@ -89,7 +89,7 @@ public class Player
      * @param deck
      * The Uno deck to draw a card.
      */
-    public void drawCard(Deck deck)
+    public void drawCard(Deck_Model deck)
     {
         hand.add(deck.draw());
         numCards++;
@@ -112,7 +112,7 @@ public class Player
      * The index of the card to play in the player's hand.
      * @return the card played.
      */
-    public Card playCard(int index)
+    public Card_Model playCard(int index)
     {
         return hand.get(index);
     }

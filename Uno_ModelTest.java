@@ -53,7 +53,7 @@ public class Uno_ModelTest {
         game.initializeGame();
         assertNotNull(game.getActiveCard(), "Should have active card");
         assertEquals(Uno_Model.GameStatus.IN_PROGRESS, game.getGameStatus());
-        assertNotEquals(Card_Model.CardType.WILD_DRAW_TWO, game.getInitialCard().getCardType());
+        assertNotEquals(Card_Model.CardValue.WILD_DRAW_TWO, game.getInitialCard().getCardType());
         assertEquals(93, game.getRemainingDeckCards(), "Should have dealt 15 cards");
 
         // Cannot add players after start
@@ -165,8 +165,8 @@ public class Uno_ModelTest {
         game.initializeGame();
 
         // Wild cards always valid
-        assertTrue(game.isValidPlay(new Card_Model(Card_Model.Colour.WILD, Card_Model.CardType.WILD)));
-        assertTrue(game.isValidPlay(new Card_Model(Card_Model.Colour.WILD, Card_Model.CardType.WILD_DRAW_TWO)));
+        assertTrue(game.isValidPlay(new Card_Model(Card_Model.CardColour.WILD, Card_Model.CardValue.WILD)));
+        assertTrue(game.isValidPlay(new Card_Model(Card_Model.CardColour.WILD, Card_Model.CardValue.WILD_DRAW_TWO)));
 
         // Null card invalid
         assertFalse(game.isValidPlay(null), "Null card invalid");
@@ -196,31 +196,31 @@ public class Uno_ModelTest {
             activeCardField.setAccessible(true);
 
             // Regular number card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.RED, Card_Model.CardType.FIVE));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.RED, Card_Model.CardValue.FIVE));
             assertEquals(Uno_Model.SpecialCardEffect.NONE, game.identifySpecialCard());
 
             // SKIP card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.RED, Card_Model.CardType.SKIP));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.RED, Card_Model.CardValue.SKIP));
             assertEquals(Uno_Model.SpecialCardEffect.SKIP, game.identifySpecialCard());
             assertFalse(game.requiresColourSelection(), "Skip doesn't require colour");
 
             // REVERSE card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.BLUE, Card_Model.CardType.REVERSE));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.BLUE, Card_Model.CardValue.REVERSE));
             assertEquals(Uno_Model.SpecialCardEffect.REVERSE, game.identifySpecialCard());
             assertFalse(game.requiresColourSelection(), "Reverse doesn't require colour");
 
             // DRAW_ONE card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.GREEN, Card_Model.CardType.DRAW_ONE));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.GREEN, Card_Model.CardValue.DRAW_ONE));
             assertEquals(Uno_Model.SpecialCardEffect.DRAW_ONE, game.identifySpecialCard());
             assertFalse(game.requiresColourSelection(), "Draw One doesn't require colour");
 
             // WILD card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.WILD, Card_Model.CardType.WILD));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.WILD, Card_Model.CardValue.WILD));
             assertEquals(Uno_Model.SpecialCardEffect.WILD, game.identifySpecialCard());
             assertTrue(game.requiresColourSelection(), "Wild requires colour");
 
             // WILD_DRAW_TWO card
-            activeCardField.set(game, new Card_Model(Card_Model.Colour.WILD, Card_Model.CardType.WILD_DRAW_TWO));
+            activeCardField.set(game, new Card_Model(Card_Model.CardColour.WILD, Card_Model.CardValue.WILD_DRAW_TWO));
             assertEquals(Uno_Model.SpecialCardEffect.WILD_DRAW_TWO, game.identifySpecialCard());
             assertTrue(game.requiresColourSelection(), "Wild Draw Two requires colour");
 

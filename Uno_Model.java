@@ -15,8 +15,8 @@ public class Uno_Model {
     private Deck_Model stack;
     private Card_Model activeCard;
     private Card_Model initialCard;
-    private Card_Model.CardType matchType;
-    private Card_Model.Colour matchColour;
+    private Card_Model.CardValue matchType;
+    private Card_Model.CardColour matchColour;
     private Player_Model victor;
     private int turnIdx;
     private GameStatus status;
@@ -37,8 +37,8 @@ public class Uno_Model {
     // ======== GETTERS ========
     public Player_Model getCurrentPlayer() { return participants.isEmpty() ? null : participants.get(turnIdx); }
     public Card_Model getActiveCard() { return activeCard; }
-    public Card_Model.Colour getMatchColour() { return matchColour; }
-    public int getRemainingDeckCards() { return stack.getNumDeckCards(); }
+    public Card_Model.CardColour getMatchColour() { return matchColour; }
+    public int getRemainingDeckCards() { return stack.getNumDrawCards(); }
     public GameStatus getGameStatus() { return status; }
     public boolean isPendingColourSelection() { return pendingColourSelection; }
     public boolean isRoundEnded() { return status == GameStatus.ROUND_ENDED || status == GameStatus.GAME_OVER; }
@@ -57,11 +57,11 @@ public class Uno_Model {
     public void initializeGame() {
         distributeInitialCards();
         do { initialCard = stack.draw(); }
-        while (initialCard.getCardType() == Card_Model.CardType.WILD_DRAW_TWO);
+        while (initialCard.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO);
 
         activeCard = initialCard;
         matchColour = initialCard.getColour();
-        matchType = initialCard.getCardType();
+        matchType = initialCard.getCardValue();
         status = GameStatus.IN_PROGRESS;
         processInitialCardEffect();
         System.out.println(getGameStateString());
@@ -79,7 +79,7 @@ public class Uno_Model {
             case REVERSE -> { if (participants.size()==2) advanceToNextTurn(); else playDirection*=-1; }
             case SKIP -> advanceToNextTurn();
             case DRAW_ONE -> { forceCurrentPlayerDraw(1); advanceToNextTurn(); }
-            case WILD -> matchColour = Card_Model.Colour.values()[new Random().nextInt(4)];
+            case WILD -> matchColour = Card_Model.CardColour.values()[new Random().nextInt(4)];
             default -> {}
         }
     }
@@ -94,8 +94,8 @@ public class Uno_Model {
     // ======== CARD LOGIC ========
     public boolean isValidPlay(Card_Model card) {
         if (card == null) return false;
-        if (card.getCardType() == Card_Model.CardType.WILD || card.getCardType() == Card_Model.CardType.WILD_DRAW_TWO) return true;
-        return card.getColour() == matchColour || card.getCardType() == matchType;
+        if (card.getCardValue() == Card_Model.CardValue.WILD || card.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO) return true;
+        return card.getColour() == matchColour || card.getCardValue() == matchType;
     }
 
     public TurnAction playCard(int index) {
@@ -105,8 +105,8 @@ public class Uno_Model {
         if (!isValidPlay(card)) return TurnAction.INVALID_PLAY;
 
         activeCard = card;
-        matchType = card.getCardType();
-        if (card.getColour()!=Card_Model.Colour.WILD) matchColour = card.getColour();
+        matchType = card.getCardValue();
+        if (card.getColour()!=Card_Model.CardColour.WILD) matchColour = card.getColour();
         player.discardCard(index);
 
         if (player.handSize()==0) { endRound(player); return TurnAction.CARD_PLAYED; }
@@ -138,7 +138,7 @@ public class Uno_Model {
 
     public SpecialCardEffect identifySpecialCard() {
         if(activeCard==null) return SpecialCardEffect.NONE;
-        return switch(activeCard.getCardType()){
+        return switch(activeCard.getCardValue()){
             case REVERSE -> SpecialCardEffect.REVERSE;
             case SKIP -> SpecialCardEffect.SKIP;
             case DRAW_ONE -> SpecialCardEffect.DRAW_ONE;
@@ -148,8 +148,8 @@ public class Uno_Model {
         };
     }
 
-    public boolean setActiveColour(Card_Model.Colour colour){
-        if(colour==null || colour==Card_Model.Colour.WILD) return false;
+    public boolean setActiveColour(Card_Model.CardColour colour){
+        if(colour==null || colour==Card_Model.CardColour.WILD) return false;
         matchColour=colour; pendingColourSelection=false;
         SpecialCardEffect effect=identifySpecialCard();
         if(effect==SpecialCardEffect.WILD_DRAW_TWO){ forceNextPlayerDraw(2); skipNextPlayer(); }
@@ -158,7 +158,7 @@ public class Uno_Model {
     }
 
     private void endRound(Player_Model winner){
-        int points = participants.stream().filter(p->p!=winner).flatMap(p->p.getHand().stream()).mapToInt(c->c.getCardType().cardScore).sum();
+        int points = participants.stream().filter(p->p!=winner).flatMap(p->p.getHand().stream()).mapToInt(c->c.getCardValue().cardScore).sum();
         winner.incrementScore(points);
         roundScores.put(winner, points);
         if(winner.fetchScore()>=TARGET_SCORE){ victor=winner; status=GameStatus.GAME_OVER; }
@@ -207,9 +207,9 @@ public class Uno_Model {
                 else if(res==TurnAction.CARD_PLAYED && game.isPendingColourSelection()){
                     System.out.print("You played a Wild! Choose colour (RED, BLUE, GREEN, YELLOW): ");
                     String c=sc.next();
-                    Card_Model.Colour col;
-                    try{ col=Card_Model.Colour.valueOf(c.toUpperCase()); }
-                    catch(Exception e){ col=Card_Model.Colour.RED; }
+                    Card_Model.CardColour col;
+                    try{ col=Card_Model.CardColour.valueOf(c.toUpperCase()); }
+                    catch(Exception e){ col=Card_Model.CardColour.RED; }
                     game.setActiveColour(col);
                 }
             }
