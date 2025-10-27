@@ -16,7 +16,16 @@ public class Player_Model
         numCards = 0;
         score = 0;
     }
-    
+
+    /**
+     * Constructs a new player that sets the name with an empty card list and a score of 0.
+     */
+    public Player_Model(String name){
+        this.name = name;
+        hand = new ArrayList<Card_Model>();
+        numCards = 0;
+        score = 0;
+    }
     /**
      * Gets list of cards in the player's hand.
      * @return ArrayList containing the player's cards.
@@ -53,6 +62,7 @@ public class Player_Model
         return name;
     }
 
+
     /**
      * Sets the player's score.
      * @param score
@@ -61,6 +71,14 @@ public class Player_Model
     public void setScore(int score)
     {
         this.score = score;
+    }
+
+    /**
+     * Reset the player's score to 0.
+     */
+    public void resetScore()
+    {
+        score = 0;
     }
 
     /**
@@ -94,6 +112,7 @@ public class Player_Model
         hand.add(deck.draw());
         numCards++;
     }
+
 
     /*
      * Removes card from the player's hand by its index, decreases card count.

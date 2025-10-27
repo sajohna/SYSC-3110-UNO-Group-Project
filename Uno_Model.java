@@ -70,7 +70,7 @@ public class Uno_Model {
     private void distributeInitialCards() {
         for (int i = 0; i < CARDS_PER_PLAYER; i++)
             for (Player_Model p : participants)
-                p.addCardToHand(stack);
+                p.drawCard(stack);
     }
 
     private void processInitialCardEffect() {
@@ -100,16 +100,16 @@ public class Uno_Model {
 
     public TurnAction playCard(int index) {
         Player_Model player = getCurrentPlayer();
-        if (index<0 || index>=player.handSize()) return TurnAction.INVALID_CARD_INDEX;
-        Card_Model card = player.viewCard(index);
+        if (index<0 || index>=player.getNumCards()) return TurnAction.INVALID_CARD_INDEX;
+        Card_Model card = player.playCard(index);
         if (!isValidPlay(card)) return TurnAction.INVALID_PLAY;
 
         activeCard = card;
         matchType = card.getCardValue();
         if (card.getColour()!=Card_Model.CardColour.WILD) matchColour = card.getColour();
-        player.discardCard(index);
+        player.removeCard(index);
 
-        if (player.handSize()==0) { endRound(player); return TurnAction.CARD_PLAYED; }
+        if (player.getNumCards()==0) { endRound(player); return TurnAction.CARD_PLAYED; }
 
         SpecialCardEffect effect = identifySpecialCard();
         if (effect==SpecialCardEffect.WILD || effect==SpecialCardEffect.WILD_DRAW_TWO) pendingColourSelection=true;
@@ -117,8 +117,8 @@ public class Uno_Model {
         return TurnAction.CARD_PLAYED;
     }
 
-    public TurnAction drawCardAndPass() { getCurrentPlayer().addCardToHand(stack); advanceToNextTurn(); return TurnAction.TURN_PASSED; }
-    public TurnAction drawCard() { getCurrentPlayer().addCardToHand(stack); return TurnAction.CARD_DRAWN; }
+    public TurnAction drawCardAndPass() { getCurrentPlayer().drawCard(stack); advanceToNextTurn(); return TurnAction.TURN_PASSED; }
+    public TurnAction drawCard() { getCurrentPlayer().drawCard(stack); return TurnAction.CARD_DRAWN; }
 
     private void processSpecialCardEffect(SpecialCardEffect effect) {
         switch(effect){
@@ -129,11 +129,11 @@ public class Uno_Model {
         }
     }
 
-    private void forceCurrentPlayerDraw(int n) { for(int i=0;i<n;i++) getCurrentPlayer().addCardToHand(stack); }
+    private void forceCurrentPlayerDraw(int n) { for(int i=0;i<n;i++) getCurrentPlayer().drawCard(stack); }
     private void forceNextPlayerDraw(int n){
         int nextIdx = (turnIdx+playDirection+participants.size())%participants.size();
         Player_Model next = participants.get(nextIdx);
-        for(int i=0;i<n;i++) next.addCardToHand(stack);
+        for(int i=0;i<n;i++) next.drawCard(stack);
     }
 
     public SpecialCardEffect identifySpecialCard() {
@@ -159,9 +159,9 @@ public class Uno_Model {
 
     private void endRound(Player_Model winner){
         int points = participants.stream().filter(p->p!=winner).flatMap(p->p.getHand().stream()).mapToInt(c->c.getCardValue().cardScore).sum();
-        winner.incrementScore(points);
+        winner.setScore(points);
         roundScores.put(winner, points);
-        if(winner.fetchScore()>=TARGET_SCORE){ victor=winner; status=GameStatus.GAME_OVER; }
+        if(winner.getScore()>=TARGET_SCORE){ victor=winner; status=GameStatus.GAME_OVER; }
         else status=GameStatus.ROUND_ENDED;
     }
 
@@ -177,7 +177,7 @@ public class Uno_Model {
         sb.append("Status: ").append(status).append("\n");
         Player_Model current=getCurrentPlayer();
         if(current!=null){ sb.append("\n--- CURRENT PLAYER ---\n"); sb.append(current.getName()).append("'s Hand: ").append(current.getHand()).append("\n"); }
-        sb.append("\n=== SCORES ===\n"); participants.forEach(p->sb.append(p.getName()).append(": ").append(p.fetchScore()).append("\n"));
+        sb.append("\n=== SCORES ===\n"); participants.forEach(p->sb.append(p.getName()).append(": ").append(p.getScore()).append("\n"));
         return sb.toString();
     }
 

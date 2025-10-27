@@ -52,14 +52,6 @@ public class Card_Model {
         return this.COLOUR;
     }
 
-    /**
-     * Sets the color of the card.
-     *
-     * @param colour the card color.
-     */
-    public void setColour(CardColour colour){
-        this.COLOUR = colour;
-    }
 
     /**
      * Returns a string representation of the card, including its color and value.
