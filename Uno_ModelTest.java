@@ -23,9 +23,9 @@ public class Uno_ModelTest {
     @BeforeEach
     void setUp() {
         game = new Uno_Model();
-        player1 = new Player_Model("Alice");
-        player2 = new Player_Model("Bob");
-        player3 = new Player_Model("Charlie");
+        player1 = new Player_Model("Lasya");
+        player2 = new Player_Model("Saan");
+        player3 = new Player_Model("Lucas");
     }
 
     /**

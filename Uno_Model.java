@@ -45,7 +45,9 @@ import java.util.stream.IntStream;
  *       Enables:
  *         * Elegant bidirectional turn traversal with single formula
  *
- *  Incomplete Implementation Documentation - This model is made so that it works on a text based interface. Ideally, the model should only have the game logic which is then implemented with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
+ *  Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
+ * Ideally, the model should only have the game logic which is then implemented with a GUI through the Controller and Viewer. 
+ * This will be implemented in the next milestone.
  *
  *
  * @author Saan John

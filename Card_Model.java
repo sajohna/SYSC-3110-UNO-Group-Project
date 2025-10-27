@@ -1,4 +1,47 @@
+/**
+ * Model class representing an UNO card with its value and colour
+ * Manages the properties and behaviors of individual UNO cards.
+ * 
+ * This class includes:
+ * - Enums for card values and colours
+ * - Creation of UNO cards with specific values and colours
+ * - Methods to retrieve card properties
+ * - String representation of the card
+ * 
+ * Data Structure Design:
+ * - Enum of CardVlue: Represents the differnet values of a UNO card
+ *   ENUM chose for:
+ *    * Fixed set of constants: Card values are predfined/determined set to not change
+ *    * Allows for types safety: prevents invalid values from being assigned to cards
+ *    * Readability: makes code more understandable by using descriptive names for card values
+ * - Enum of CardColour: Represents the different colours of a UNO card
+ *   ENUM chose for:
+ *    * Fixed set of constants: Card colours are predfined/determined set to not change
+ *    * Allows for types safety: prevents invalid colours from being assigned to cards
+ *    * Readability: makes code more understandable by using descriptive names for card colours
+ * - final CardValue Value: Stores the value of the card
+ *   final chose for:
+ *    * Immutability: ensure that once a card is created, its value cannot be changed
+ *    * Consistency: maintains the card's properties throughout its lifecycle
+ * - final CardColour Colour: Stores the colour of the card 
+ *   final chose for:
+ *    * Immutability: ensure that once a card is created, its colour cannot be changed
+ *    * Consistency: maintains the card's properties throughout its lifecycle  
+ * 
+ * Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
+ * Ideally, the model should only have the deck logic which is then implemented to be used with the game logic
+ * with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
+ * 
+ * @author Lasya Erukulla
+ * @version 1.0 - Milestone 1
+ */
+
 public class Card_Model {
+    /**
+     * Enum for the different colours of Uno cards
+     */
+    public enum CardColour {RED, BLUE, GREEN, YELLOW, WILD}
+
     /**
      * Enum for the different values of Uno cards
      */
@@ -13,11 +56,6 @@ public class Card_Model {
 
     }
     
-    /**
-     * Enum for the different colours of Uno cards
-     */
-    public enum CardColour {RED, BLUE, GREEN, YELLOW, WILD}
-
     private final CardValue VALUE;
     private final CardColour COLOUR;
 
