@@ -1,3 +1,12 @@
+/**
+ * This class represents a player in Uno Flip. Each player has a name, a hand of cards,
+ * a score, and a count of how many cards they currently hold. The class provides methods to manage the player's hand,
+ * such as adding, removing, drawing, and playing cards. It also allows for updating and resetting the player's score.
+ *
+ * @author Lucas Baker
+ * @version 10-27-2025
+ */
+
 import java.util.ArrayList;
 
 public class Player_Model
@@ -102,7 +111,7 @@ public class Player_Model
         numCards++;
     }
 
-    /*
+    /**
      * Draws card from the deck, adds it to the player's hand, increases card count.
      * @param deck
      * The Uno deck to draw a card.
@@ -114,7 +123,7 @@ public class Player_Model
     }
 
 
-    /*
+    /**
      * Removes card from the player's hand by its index, decreases card count.
      * @param index
      * The index of the card in the list to remove from the player's hand.
@@ -125,7 +134,7 @@ public class Player_Model
         numCards--;
     }
 
-    /*
+    /**
      * Plays card from the player's hand.
      * @param index
      * The index of the card to play in the player's hand.
@@ -136,7 +145,7 @@ public class Player_Model
         return hand.get(index);
     }
 
-    /*
+    /**
      * Displays the player's cards.
      */
     public void displayCards()
