@@ -24,6 +24,10 @@ public class Uno_Model {
     private boolean pendingColourSelection;
     private Map<Player_Model, Integer> roundScores;
 
+    /**
+     * Constructs a new Uno_Model and initializes game state.
+     * Sets up empty player list, new deck, and default game parameters.
+     */
     public Uno_Model() {
         participants = new ArrayList<>();
         stack = new Deck_Model();
@@ -35,17 +39,87 @@ public class Uno_Model {
     }
 
     // ======== GETTERS ========
-    public Player_Model getCurrentPlayer() { return participants.isEmpty() ? null : participants.get(turnIdx); }
-    public Card_Model getActiveCard() { return activeCard; }
-    public Card_Model.CardColour getMatchColour() { return matchColour; }
-    public int getRemainingDeckCards() { return stack.getNumDrawCards(); }
-    public GameStatus getGameStatus() { return status; }
-    public boolean isPendingColourSelection() { return pendingColourSelection; }
-    public boolean isRoundEnded() { return status == GameStatus.ROUND_ENDED || status == GameStatus.GAME_OVER; }
-    public boolean isGameOver() { return status == GameStatus.GAME_OVER; }
-    public Player_Model getWinner() { return victor; }
+
+    /**
+     * Returns the player whose turn it currently is.
+     * @return the current Player_Model, or null if no players have been added
+     */
+    public Player_Model getCurrentPlayer() {
+        return participants.isEmpty() ? null : participants.get(turnIdx);
+    }
+
+    /**
+     * Returns the card currently at the top of the discard pile.
+     * @return the active Card_Model, or null if game hasn't started
+     */
+    public Card_Model getActiveCard() {
+        return activeCard;
+    }
+
+    /**
+     * Returns the colour that must be matched for valid plays.
+     * @return the current match colour
+     */
+    public Card_Model.CardColour getMatchColour() {
+        return matchColour;
+    }
+
+    /**
+     * Returns the number of cards remaining in the draw pile.
+     * @return the count of drawable cards
+     */
+    public int getRemainingDeckCards() {
+        return stack.getNumDrawCards();
+    }
+
+    /**
+     * Returns the current status of the game.
+     * @return the current GameStatus enum value
+     */
+    public GameStatus getGameStatus() {
+        return status;
+    }
+
+    /**
+     * Checks if a wild card colour selection is pending.
+     * @return true if waiting for colour selection, false otherwise
+     */
+    public boolean isPendingColourSelection() {
+        return pendingColourSelection;
+    }
+
+    /**
+     * Checks if the current round has ended.
+     * @return true if round is over or game is over, false otherwise
+     */
+    public boolean isRoundEnded() {
+        return status == GameStatus.ROUND_ENDED || status == GameStatus.GAME_OVER;
+    }
+
+    /**
+     * Checks if the entire game has concluded.
+     * @return true if a player has reached the target score, false otherwise
+     */
+    public boolean isGameOver() {
+        return status == GameStatus.GAME_OVER;
+    }
+
+    /**
+     * Returns the winner of the game.
+     * @return the winning Player_Model, or null if game is not over
+     */
+    public Player_Model getWinner() {
+        return victor;
+    }
 
     // ======== SETUP ========
+
+    /**
+     * Adds a player to the game.
+     * Can only be called before the game starts and when under max player limit.
+     * @param player the Player_Model to add
+     * @return true if player was successfully added, false otherwise
+     */
     public boolean addPlayer(Player_Model player) {
         if (status != GameStatus.NOT_STARTED || player == null || participants.size() >= MAX_PARTICIPANTS)
             return false;
@@ -54,6 +128,11 @@ public class Uno_Model {
         return true;
     }
 
+    /**
+     * Initializes the game by dealing cards, setting the initial active card,
+     * and processing any special effects from the starting card.
+     * Sets game status to IN_PROGRESS.
+     */
     public void initializeGame() {
         distributeInitialCards();
         do { initialCard = stack.draw(); }
@@ -67,12 +146,20 @@ public class Uno_Model {
         System.out.println(getGameStateString());
     }
 
+    /**
+     * Deals the starting hand to each player.
+     * Each player receives CARDS_PER_PLAYER cards from the deck.
+     */
     private void distributeInitialCards() {
         for (int i = 0; i < CARDS_PER_PLAYER; i++)
             for (Player_Model p : participants)
                 p.drawCard(stack);
     }
 
+    /**
+     * Processes any special effect of the initial card drawn at game start.
+     * Handles REVERSE, SKIP, DRAW_ONE, and WILD card effects.
+     */
     private void processInitialCardEffect() {
         SpecialCardEffect effect = identifySpecialCard();
         switch (effect) {
@@ -85,19 +172,54 @@ public class Uno_Model {
     }
 
     // ======== TURN MANAGEMENT ========
+
+    /**
+     * Advances to the next player's turn based on current play direction.
+     * Wraps around to the beginning of the player list when necessary.
+     */
     public void advanceToNextTurn() {
         turnIdx = (turnIdx + playDirection + participants.size()) % participants.size();
     }
-    public void skipNextPlayer() { advanceToNextTurn(); advanceToNextTurn(); }
-    public void reversePlayDirection() { playDirection *= -1; if (participants.size()==2) advanceToNextTurn(); }
+
+    /**
+     * Skips the next player in turn order.
+     * Effectively advances the turn twice.
+     */
+    public void skipNextPlayer() {
+        advanceToNextTurn();
+        advanceToNextTurn();
+    }
+
+    /**
+     * Reverses the play direction (clockwise to counter-clockwise or vice versa).
+     * In a 2-player game, this acts like a skip and advances to the next turn.
+     */
+    public void reversePlayDirection() {
+        playDirection *= -1;
+        if (participants.size()==2) advanceToNextTurn();
+    }
 
     // ======== CARD LOGIC ========
+
+    /**
+     * Checks if a card can be legally played on the current active card.
+     * Wild cards are always valid. Other cards must match colour or value.
+     * @param card the Card_Model to validate
+     * @return true if the card can be played, false otherwise
+     */
     public boolean isValidPlay(Card_Model card) {
         if (card == null) return false;
         if (card.getCardValue() == Card_Model.CardValue.WILD || card.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO) return true;
         return card.getColour() == matchColour || card.getCardValue() == matchType;
     }
 
+    /**
+     * Attempts to play a card from the current player's hand.
+     * Validates the card index and legality of the play.
+     * Processes special card effects and checks for round end.
+     * @param index the index of the card in the player's hand
+     * @return TurnAction indicating the result of the play attempt
+     */
     public TurnAction playCard(int index) {
         Player_Model player = getCurrentPlayer();
         if (index<0 || index>=player.getNumCards()) return TurnAction.INVALID_CARD_INDEX;
@@ -117,9 +239,30 @@ public class Uno_Model {
         return TurnAction.CARD_PLAYED;
     }
 
-    public TurnAction drawCardAndPass() { getCurrentPlayer().drawCard(stack); advanceToNextTurn(); return TurnAction.TURN_PASSED; }
-    public TurnAction drawCard() { getCurrentPlayer().drawCard(stack); return TurnAction.CARD_DRAWN; }
+    /**
+     * Draws a card for the current player and passes their turn.
+     * @return TurnAction.TURN_PASSED
+     */
+    public TurnAction drawCardAndPass() {
+        getCurrentPlayer().drawCard(stack);
+        advanceToNextTurn();
+        return TurnAction.TURN_PASSED;
+    }
 
+    /**
+     * Draws a single card for the current player without ending their turn.
+     * @return TurnAction.CARD_DRAWN
+     */
+    public TurnAction drawCard() {
+        getCurrentPlayer().drawCard(stack);
+        return TurnAction.CARD_DRAWN;
+    }
+
+    /**
+     * Processes the effect of a special card after it has been played.
+     * Handles REVERSE, SKIP, and DRAW_ONE effects.
+     * @param effect the SpecialCardEffect to process
+     */
     private void processSpecialCardEffect(SpecialCardEffect effect) {
         switch(effect){
             case REVERSE -> reversePlayDirection();
@@ -129,13 +272,28 @@ public class Uno_Model {
         }
     }
 
-    private void forceCurrentPlayerDraw(int n) { for(int i=0;i<n;i++) getCurrentPlayer().drawCard(stack); }
+    /**
+     * Forces the current player to draw a specified number of cards.
+     * @param n the number of cards to draw
+     */
+    private void forceCurrentPlayerDraw(int n) {
+        for(int i=0;i<n;i++) getCurrentPlayer().drawCard(stack);
+    }
+
+    /**
+     * Forces the next player in turn order to draw a specified number of cards.
+     * @param n the number of cards to draw
+     */
     private void forceNextPlayerDraw(int n){
         int nextIdx = (turnIdx+playDirection+participants.size())%participants.size();
         Player_Model next = participants.get(nextIdx);
         for(int i=0;i<n;i++) next.drawCard(stack);
     }
 
+    /**
+     * Identifies the special effect of the current active card.
+     * @return the SpecialCardEffect enum corresponding to the active card
+     */
     public SpecialCardEffect identifySpecialCard() {
         if(activeCard==null) return SpecialCardEffect.NONE;
         return switch(activeCard.getCardValue()){
@@ -148,6 +306,12 @@ public class Uno_Model {
         };
     }
 
+    /**
+     * Sets the active colour after a wild card has been played.
+     * Also processes WILD_DRAW_TWO penalty if applicable and advances the turn.
+     * @param colour the CardColour to set as the new match colour
+     * @return true if colour was successfully set, false if invalid colour provided
+     */
     public boolean setActiveColour(Card_Model.CardColour colour){
         if(colour==null || colour==Card_Model.CardColour.WILD) return false;
         matchColour=colour; pendingColourSelection=false;
@@ -157,6 +321,11 @@ public class Uno_Model {
         return true;
     }
 
+    /**
+     * Ends the current round when a player empties their hand.
+     * Calculates points, updates scores, and checks if game is over.
+     * @param winner the Player_Model who emptied their hand
+     */
     private void endRound(Player_Model winner){
         int points = participants.stream().filter(p->p!=winner).flatMap(p->p.getHand().stream()).mapToInt(c->c.getCardValue().cardScore).sum();
         winner.setScore(points);
@@ -165,9 +334,44 @@ public class Uno_Model {
         else status=GameStatus.ROUND_ENDED;
     }
 
-    public void startNewRound(){ participants.forEach(p->p.getHand().clear()); stack=new Deck_Model(); turnIdx=0; playDirection=1; pendingColourSelection=false; activeCard=null; initialCard=null; roundScores.clear(); initializeGame(); }
-    public void resetGame(){ participants.forEach(p->{p.resetScore(); p.getHand().clear();}); stack=new Deck_Model(); turnIdx=0; playDirection=1; pendingColourSelection=false; activeCard=null; initialCard=null; victor=null; status=GameStatus.NOT_STARTED; roundScores.clear(); }
+    /**
+     * Starts a new round by clearing hands, resetting the deck, and re-initializing.
+     * Preserves player scores from previous rounds.
+     */
+    public void startNewRound(){
+        participants.forEach(p->p.getHand().clear());
+        stack=new Deck_Model();
+        turnIdx=0;
+        playDirection=1;
+        pendingColourSelection=false;
+        activeCard=null;
+        initialCard=null;
+        roundScores.clear();
+        initializeGame();
+    }
 
+    /**
+     * Resets the entire game to initial state.
+     * Clears all player hands and scores, resets deck, and sets status to NOT_STARTED.
+     */
+    public void resetGame(){
+        participants.forEach(p->{p.resetScore(); p.getHand().clear();});
+        stack=new Deck_Model();
+        turnIdx=0;
+        playDirection=1;
+        pendingColourSelection=false;
+        activeCard=null;
+        initialCard=null;
+        victor=null;
+        status=GameStatus.NOT_STARTED;
+        roundScores.clear();
+    }
+
+    /**
+     * Generates a formatted string representation of the current game state.
+     * Includes active card, match colour, deck size, direction, status, current player's hand, and all scores.
+     * @return a formatted string containing comprehensive game state information
+     */
     public String getGameStateString(){
         StringBuilder sb=new StringBuilder("\n=== UNO GAME STATE ===\n");
         sb.append("Active Card: ").append(activeCard).append("\n");
@@ -182,6 +386,12 @@ public class Uno_Model {
     }
 
     // ======== MAIN METHOD ======== (for testing purposes)
+
+    /**
+     * Main method for manual testing and demonstration of game functionality.
+     * Creates a simple two-player game with console input for playing cards.
+     * @param args command line arguments (not used)
+     */
     public static void main(String[] args){
         Uno_Model game = new Uno_Model();
         Player_Model alice = new Player_Model("Alice");
