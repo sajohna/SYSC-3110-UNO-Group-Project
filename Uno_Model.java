@@ -1,6 +1,56 @@
 import java.util.*;
 import java.util.stream.IntStream;
 
+/**
+ * Model class representing the core game logic for UNO.
+ * Manages game state, turn order, card plays, and scoring across multiple rounds.
+ *
+ * This class handles:
+ *   - Player management (2-4 players)
+ *   - Game initialization and round management
+ *   - Turn advancement and direction control
+ *   - Card validation and special card effects (SKIP, REVERSE, DRAW, WILD)
+ *   - Scoring and win condition checking (first to 500 points)
+ *
+ * Game flow:
+ *   1. Add 2-4 players using addPlayer(Player_Model)
+ *   2. Initialize game with initializeGame()
+ *   3. Players take turns playing cards or drawing
+ *   4. Round ends when a player empties their hand
+ *   5. Game continues until a player reaches 500 points
+ *
+ * Data Structure Design:
+ *
+ *   - List of Player_Model (participants): Stores players in turn order.
+ *       ArrayList chosen for:
+ *         * Efficient sequential iteration during initialization and scoring
+ *         * Fixed size after game starts (max 4 players), so no dynamic resizing concerns
+ *         * Natural ordering supports circular turn advancement with modulo arithmetic
+ *
+ *   - Deck_Model stack: Encapsulates the draw pile using internal stack/queue operations.
+ *       Provides:
+ *         * Automatic reshuffling when deck depletes
+ *         * Abstraction of card management away from game logic
+ *
+ *   - Map of Player_Model to Integer (roundScores): Tracks points earned per player each round.
+ *       HashMap chosen for:
+ *         * Direct association between player objects and their round points
+ *         * Easy clearing between rounds while maintaining player references
+ *
+ *   - int turnIdx: Tracks current player position. Combined with ArrayList enables:
+ *         * Simple modulo arithmetic for circular turn advancement
+ *         * Bidirectional traversal via playDirection multiplier
+ *
+ *   - int playDirection: Multiplier (1 or -1) for turn advancement direction.
+ *       Enables:
+ *         * Elegant bidirectional turn traversal with single formula
+ *
+ *  Incomplete Implementation Documentation - This model is made so that it works on a text based interface. Ideally, the model should only have the game logic which is then implemented with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
+ *
+ *
+ * @author Saan John
+ * @version 1.0 - Milestone 1
+ */
 public class Uno_Model {
     private static final int CARDS_PER_PLAYER = 7;
     private static final int MIN_PARTICIPANTS = 2;
@@ -433,3 +483,4 @@ public class Uno_Model {
         System.out.println("\n🏆 GAME OVER! Winner: "+game.getWinner().getName());
     }
 }
+
