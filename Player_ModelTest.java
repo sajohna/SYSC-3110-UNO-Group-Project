@@ -9,9 +9,17 @@ public class Player_ModelTest
     private static Player_Model player;
     private static int count;
 
+    /**
+     * Test suite for the Player_Model class.
+     * Validates the functionality of the Player_Model class methods, cunstructors, getters, setters,
+     * and card functionality
+     *
+     * @author Lucas Baker
+     * @version 1.0 - Milestone 1
+     */
     public Player_ModelTest() {}
 
-    /*
+    /**
      * Sets test player and counter to default values before each test
      */
     @BeforeEach
@@ -20,7 +28,7 @@ public class Player_ModelTest
         player = null;
     }
 
-    /*
+    /**
      * Displays the counter value for each test after they are complete
      */
     @AfterEach
@@ -29,6 +37,10 @@ public class Player_ModelTest
         System.out.println("Number of Tests Completed: " + count + "\n");
     }
 
+    /**
+     * Tests the default constructor of the Player_Model Class
+     * Asserts all variables are defaulted correctly
+     */
     @Test
     public void test_DefaultConstructor() 
     {
@@ -39,7 +51,11 @@ public class Player_ModelTest
         assertEquals(temp_list, player.getHand());
         count = 2;
     }
-    
+
+    /**
+     * Tests the getHand method of the Player_Model Class
+     * Asserts the getter returns the proper value and colour of the cards in the player's hand
+     */
     @Test
     public void test_getHand() 
     {
@@ -59,7 +75,11 @@ public class Player_ModelTest
             count += 2;
         }
     }
-    
+
+    /**
+     * Tests the getNumCards method of the Player_Model Class
+     * Asserts the getter returns the proper number of cards in the player's hand
+     */
     @Test
     public void test_getNumCards() 
     {
@@ -73,6 +93,10 @@ public class Player_ModelTest
         count = 2;
     }
 
+    /**
+     * Tests the getScore method of the Player_Model Class
+     * Asserts the getter returns the proper score of the player
+     */
     @Test
     public void test_getScore() 
     {
@@ -83,6 +107,10 @@ public class Player_ModelTest
         count = 1;
     }
 
+    /**
+     * Tests the getName method of the Player_Model Class
+     * Asserts the getter returns the proper name of the player
+     */
     @Test
     public void test_getName() 
     {
@@ -93,6 +121,10 @@ public class Player_ModelTest
         count = 1;
     }
 
+    /**
+     * Tests the setScore method of the Player_Model Class
+     * Asserts the method sets the score of the player
+     */
     @Test
     public void test_setScore() 
     {
@@ -105,6 +137,10 @@ public class Player_ModelTest
         count = 2;
     }
 
+    /**
+     * Tests the setName method of the Player_Model Class
+     * Asserts the method sets the name of the player
+     */
     @Test
     public void test_setName() 
     {
@@ -115,6 +151,10 @@ public class Player_ModelTest
         count = 1;
     }
 
+    /**
+     * Tests the addCard method of the Player_Model Class
+     * Asserts the method adds the proper card to the player's hand
+     */
     @Test
     public void test_addCard() 
     {
@@ -127,6 +167,10 @@ public class Player_ModelTest
         count = 3;
     }
 
+    /**
+     * Tests the drawCard method of the Player_Model Class
+     * Asserts the method adds a card to the player's hand and removes one from the deck
+     */
     @Test
     public void test_drawCard() 
     {
@@ -142,6 +186,10 @@ public class Player_ModelTest
         count = 4;
     }
 
+    /**
+     * Tests the removeCard method of the Player_Model Class
+     * Asserts the method removes the proper card from the player's hand
+     */
     @Test
     public void test_removeCard() 
     {
@@ -162,6 +210,10 @@ public class Player_ModelTest
         count = 7;
     }
 
+    /**
+     * Tests the playCard method of the Player_Model Class
+     * Asserts the method plays the proper card from the player's hand
+     */
     @Test
     public void test_playCard() 
     {

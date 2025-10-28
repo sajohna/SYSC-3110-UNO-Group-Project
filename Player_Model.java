@@ -3,8 +3,17 @@
  * a score, and a count of how many cards they currently hold. The class provides methods to manage the player's hand,
  * such as adding, removing, drawing, and playing cards. It also allows for updating and resetting the player's score.
  *
+ * Data Structure Design:
+ * - String name: Holds the player's display name, used for identification in the game UI and logic
+ * - ArrayList of Card_Model: A dynamic list that stores the cards currently in the player's hand
+ *   ArrayList choosen for:
+ *      * structure allows for efficient indexed access (for playing cards by index)
+ *      * easy addition/removal as the hand changes during play
+ * - int score: Tracks the player’s total score in the game
+ * - int numCards: Keeps track of the number of cards in player's hand
+ *
  * @author Lucas Baker
- * @version 10-27-2025
+ * @version 1.0 - Milestone 1
  */
 
 import java.util.ArrayList;
