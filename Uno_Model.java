@@ -47,7 +47,7 @@ import java.util.stream.IntStream;
  *
  *  Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
  * Ideally, the model should only have the game logic which is then implemented with a GUI through the Controller and Viewer. 
- * This will be implemented in the next milestone.
+ * This will be implemented in the next milestone. There will be a play() method implemented in the next milestone to replace main in this class so that the game attributes can be initalized by user. For now it is coded in main due to the lack of a controller and viewer class.
  *
  *
  * @author Saan John
