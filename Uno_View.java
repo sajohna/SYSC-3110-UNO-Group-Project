@@ -1,254 +1,548 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * View component for UNO Flip.
+ * Handles GUI elements and implements UnoViewHandler for event-driven updates.
+ *
+ * @author Lucas Baker
+ * @version 2.0 - Milestone 2
+ */
 public class Uno_View extends JFrame implements UnoViewHandler {
-    private Uno_Model model;
-    private JPanel playerHandPane;
-
-    private JScrollPane scrollPane;
-    private JButton topCard;
-    private JButton nextButton;
-    private JButton drawButton;
-
-    private JPanel statusPane;
+    private UnoGameController controller;
+    
+    // Main panels
+    private JPanel mainPanel;
+    private JPanel topPanel;
+    private JPanel centerPanel;
+    private JPanel bottomPanel;
+    private JPanel rightPanel;
+    
+    // Game state display components
+    private JLabel activeCardLabel;
     private JLabel currentPlayerLabel;
-
-    private JLabel playStatus;
-    private JLabel colourStatus;
-
-    private Uno_Controller controller;
-
-    private Card_Model startingCard;
-
-    private boolean firstRound;
-
-    private int numPlayers;
-
-    public Uno_View() {
-        this.model = new Uno_Model(askNumberOfPlayers());
-        this.controller = new Uno_Controller(model);
-        setTitle("Uno Flip");
+    private JLabel deckCountLabel;
+    private JLabel matchColorLabel;
+    private JTextArea gameStateArea;
+    
+    // Player hand display
+    private JPanel playerHandPanel;
+    private List<JButton> cardButtons;
+    
+    // Action buttons
+    private JButton drawCardButton;
+    private JButton nextTurnButton;
+    private JButton newRoundButton;
+    private JButton newGameButton;
+    
+    // Wild card color selection buttons
+    private JPanel colorSelectionPanel;
+    private JButton redButton;
+    private JButton blueButton;
+    private JButton greenButton;
+    private JButton yellowButton;
+    
+    // Player setup
+    private JPanel setupPanel;
+    private JButton[] playerCountButtons;
+    private JButton startGameButton;
+    
+    private int selectedPlayerCount = 0;
+    
+    /**
+     * Constructs the UnoGameView with controller.
+     */
+    public Uno_View(UnoGameController controller) {
+        this.controller = controller;
+        controller.addViewHandler(this);
+        
+        setTitle("UNO Flip");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 500);
-
-        // Create and configure components (buttons, labels, etc.)
-
-        playerHandPane = new JPanel();
-        scrollPane = new JScrollPane(playerHandPane);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(25);
-        startingCard = model.getInitialCard();
-        firstRound = true;
-        String startCard = model.getInitialCard().toString();
-        String imagePath = "images/" + startCard +".jpg";
-        ImageIcon icon = new ImageIcon(imagePath);
-        topCard = new JButton(icon);
-        topCard.putClientProperty("card", model.getInitialCard());
-        nextButton = new JButton("Next Player");
-        drawButton = new JButton("Draw Card");
-        nextButton.setActionCommand("Next Player");
-        drawButton.setActionCommand("Draw");
-        currentPlayerLabel = new JLabel((model.getCurrentPlayer().getName()) + "'s turn");
-
-        playStatus = new JLabel("Select a card");
-        colourStatus = new JLabel("Colour:" + model.getInitialCard().getColour().name());
-
-        // Add components to the frame and layout configuration
-        this.setLayout(new BorderLayout());
-        this.add(scrollPane, BorderLayout.SOUTH);
-        this.add(topCard, BorderLayout.CENTER);
-
-
-        // Status Pane Components and Creation
-        statusPane = new JPanel();
-        statusPane.setLayout(new BoxLayout(statusPane,BoxLayout.Y_AXIS));
-        currentPlayerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        playStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
-        colourStatus.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statusPane.add(currentPlayerLabel);
-        statusPane.add(playStatus);
-        statusPane.add(colourStatus);
-        this.add(statusPane,BorderLayout.WEST);
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(nextButton);
-        buttonPanel.add(drawButton);
-        this.add(buttonPanel, BorderLayout.NORTH);
-
-        //next and draw buttons
-        nextButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Uno_Event unoEvent = new Uno_Event(model);
-                handleNextTurn(e);
-                updateView();
-            }
-        });
-
-        drawButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleDrawCard(e);
-            }
-        });
-        model.checkActionCard();
-        updateView();
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
+        
+        initializeComponents();
+        setupLayout();
+        attachListeners();
+        showSetupPanel();
+        
         setVisible(true);
     }
-
-    private int askNumberOfPlayers() {
-        Integer[] playerOptions = { 2, 3, 4 };
-        JComboBox<Integer> playerDropdown = new JComboBox<>(playerOptions);
-
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Select number of players:"));
-        panel.add(playerDropdown);
-
-        int result = JOptionPane.showConfirmDialog(null, panel, "Number of Players", JOptionPane.OK_CANCEL_OPTION);
-
-        if (result == JOptionPane.OK_OPTION) {
-            return (int) playerDropdown.getSelectedItem();
+    
+    /**
+     * Initializes all UI components.
+     */
+    private void initializeComponents() {
+        mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(new Color(34, 139, 34));
+        
+        // Top panel - game state info
+        topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        topPanel.setBackground(new Color(60, 179, 113));
+        
+        activeCardLabel = new JLabel("Active Card: None");
+        activeCardLabel.setForeground(Color.WHITE);
+        
+        matchColorLabel = new JLabel("Match Color: None");
+        matchColorLabel.setForeground(Color.WHITE);
+        
+        deckCountLabel = new JLabel("Deck: 0");
+        deckCountLabel.setForeground(Color.WHITE);
+        
+        currentPlayerLabel = new JLabel("Current Player: None");
+        currentPlayerLabel.setForeground(Color.YELLOW);
+        
+        topPanel.add(currentPlayerLabel);
+        topPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        topPanel.add(activeCardLabel);
+        topPanel.add(matchColorLabel);
+        topPanel.add(deckCountLabel);
+        
+        // Center panel - player hand
+        centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(new Color(34, 139, 34));
+        
+        JLabel handLabel = new JLabel("Your Hand:");
+        handLabel.setForeground(Color.WHITE);
+        handLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        playerHandPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        playerHandPanel.setBackground(new Color(34, 139, 34));
+        
+        JScrollPane scrollPane = new JScrollPane(playerHandPanel);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollPane.getViewport().setBackground(new Color(34, 139, 34));
+        
+        centerPanel.add(handLabel, BorderLayout.NORTH);
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Bottom panel - action buttons
+        bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        bottomPanel.setBackground(new Color(60, 179, 113));
+        
+        drawCardButton = new JButton("Draw Card");
+        drawCardButton.setPreferredSize(new Dimension(150, 40));
+        
+        nextTurnButton = new JButton("Next Turn");
+        nextTurnButton.setPreferredSize(new Dimension(150, 40));
+        nextTurnButton.setEnabled(false);
+        
+        newRoundButton = new JButton("New Round");
+        newRoundButton.setPreferredSize(new Dimension(150, 40));
+        newRoundButton.setVisible(false);
+        
+        newGameButton = new JButton("New Game");
+        newGameButton.setPreferredSize(new Dimension(150, 40));
+        newGameButton.setVisible(false);
+        
+        bottomPanel.add(drawCardButton);
+        bottomPanel.add(nextTurnButton);
+        bottomPanel.add(newRoundButton);
+        bottomPanel.add(newGameButton);
+        
+        // Right panel - game state and color selection
+        rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setBackground(new Color(46, 125, 50));
+        rightPanel.setPreferredSize(new Dimension(250, 0));
+        
+        gameStateArea = new JTextArea(20, 20);
+        gameStateArea.setEditable(false);
+        gameStateArea.setBackground(new Color(240, 248, 255));
+        JScrollPane stateScroll = new JScrollPane(gameStateArea);
+        stateScroll.setBorder(BorderFactory.createTitledBorder("Scores"));
+        
+        rightPanel.add(stateScroll);
+        
+        // Color selection panel
+        colorSelectionPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        colorSelectionPanel.setBorder(BorderFactory.createTitledBorder("Choose Wild Color"));
+        colorSelectionPanel.setBackground(new Color(46, 125, 50));
+        colorSelectionPanel.setVisible(false);
+        
+        redButton = createColorButton("RED", Color.RED);
+        blueButton = createColorButton("BLUE", Color.BLUE);
+        greenButton = createColorButton("GREEN", Color.GREEN);
+        yellowButton = createColorButton("YELLOW", Color.YELLOW);
+        
+        colorSelectionPanel.add(redButton);
+        colorSelectionPanel.add(blueButton);
+        colorSelectionPanel.add(greenButton);
+        colorSelectionPanel.add(yellowButton);
+        
+        rightPanel.add(Box.createVerticalStrut(20));
+        rightPanel.add(colorSelectionPanel);
+        
+        cardButtons = new ArrayList<>();
+        
+        // Setup panel
+        setupPanel = new JPanel();
+        setupPanel.setLayout(new BoxLayout(setupPanel, BoxLayout.Y_AXIS));
+        setupPanel.setBackground(new Color(34, 139, 34));
+        
+        JLabel setupLabel = new JLabel("Select Number of Players:");
+        setupLabel.setForeground(Color.WHITE);
+        setupLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        buttonPanel.setBackground(new Color(34, 139, 34));
+        
+        playerCountButtons = new JButton[3];
+        for (int i = 0; i < 3; i++) {
+            int players = i + 2;
+            playerCountButtons[i] = new JButton(players + " Players");
+            playerCountButtons[i].setPreferredSize(new Dimension(150, 60));
+            buttonPanel.add(playerCountButtons[i]);
         }
-        System.exit(0);
-        return 0;
+        
+        startGameButton = new JButton("Start Game");
+        startGameButton.setPreferredSize(new Dimension(200, 60));
+        startGameButton.setEnabled(false);
+        startGameButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        setupPanel.add(Box.createVerticalGlue());
+        setupPanel.add(setupLabel);
+        setupPanel.add(Box.createVerticalStrut(30));
+        setupPanel.add(buttonPanel);
+        setupPanel.add(Box.createVerticalStrut(30));
+        setupPanel.add(startGameButton);
+        setupPanel.add(Box.createVerticalGlue());
     }
-
-    private void askWildCard(Card_Model card) {
-        String[] playerOptions = { "BLUE", "YELLOW","RED", "GREEN"};
-        JComboBox<String> playerDropdown = new JComboBox<>(playerOptions);
-
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Select desired colour:"));
-        panel.add(playerDropdown);
-
-        int result = JOptionPane.showConfirmDialog(null, panel, "Number of Players", JOptionPane.OK_CANCEL_OPTION);
-
-        if (result == JOptionPane.OK_OPTION) {
-            topCard.setIcon(new ImageIcon(card.getPathToImageFile()));
-            controller.playWild(card, Card_Model.CardColour.valueOf((String) playerDropdown.getSelectedItem()));
-            updateView();
-            if (card.getCardValue() == Card_Model.CardValue.WILD) {
-                updatePlayStatus("Colour has been changed!");
-            } else{
-                updatePlayStatus("Colour changed and next player draws 2/skips!");
-            }
-
-        }
+    
+    /**
+     * Sets up the layout of the main panel.
+     */
+    private void setupLayout() {
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        mainPanel.add(rightPanel, BorderLayout.EAST);
+        
+        add(mainPanel);
     }
-
-    private void showWinnerPopup() {
-        String message = model.getCurrentPlayer().getName() + "! Wins!";
-        JOptionPane.showMessageDialog(null, message, "Winner!", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    public void updatePlayerTurnLabel(){
-        currentPlayerLabel.setText((model.getCurrentPlayer().getName())  + "'s turn");
-
-    }
-
-    public void updatePlayStatus(String status){
-        playStatus.setText(status);
-    }
-
-    public void updateColourStatus(){
-        colourStatus.setText("Colour: " + model.getActiveCard().getColour().name());
-    }
-
-    public void updateView() {
-        // change player's hand, top card, and other components
-        playerHandPane.removeAll();
-
-        ArrayList<Card_Model> playerHand = controller.getCurrentPlayer().getHand();
-        updatePlayerTurnLabel();
-        updatePlayStatus("Please select a card");
-        updateColourStatus();
-
-        if (!controller.hasDrawn()){
-            drawButton.setEnabled(true);
-        }
-        else{
-            drawButton.setEnabled(false);
-        }
-
-        if (controller.getCurrentPlayer().canPlay() && !controller.getCurrentPlayer().getHasDrawn()){
-            nextButton.setEnabled(false);
-        }
-        else{
-            nextButton.setEnabled(true);
-            drawButton.setEnabled(false);
-        }
-
-        for (Card_Model card: playerHand) {
-
-            ImageIcon icon = new ImageIcon(card.getPathToImageFile());
-            JButton cardButton = new JButton(icon);
-            cardButton.putClientProperty("card", card);
-            cardButton.setActionCommand("play");
-            cardButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    handlePlay(e);
-                }
+    
+    /**
+     * Attaches all event listeners to UI components.
+     */
+    private void attachListeners() {
+        // Player count selection
+        for (int i = 0; i < playerCountButtons.length; i++) {
+            final int playerCount = i + 2;
+            playerCountButtons[i].addActionListener(e -> {
+                selectedPlayerCount = playerCount;
+                startGameButton.setEnabled(true);
             });
-            if (!controller.getCurrentPlayer().canPlay()){
-                cardButton.setEnabled(false);
-            }
-            cardButton.setVisible(true);
-            playerHandPane.add(cardButton);
         }
-        // Repaint the player hand panel
-        playerHandPane.revalidate();
-        playerHandPane.repaint();
+        
+        // Start game
+        startGameButton.addActionListener(e -> handleStartGame());
+        
+        // Draw card
+        drawCardButton.addActionListener(e -> handleDrawCard());
+        
+        // Next turn
+        nextTurnButton.addActionListener(e -> handleNextTurn());
+        
+        // New round
+        newRoundButton.addActionListener(e -> handleNewRound());
+        
+        // New game
+        newGameButton.addActionListener(e -> handleNewGame());
+        
+        // Color selection
+        redButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.RED));
+        blueButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.BLUE));
+        greenButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.GREEN));
+        yellowButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.YELLOW));
     }
-
-    @Override
-    public void handleDrawCard(ActionEvent e) {
-        controller.actionPerformed(e);
-        updateView();
-        updatePlayStatus("Drew One Card");
+    
+    /**
+     * Handles start game action.
+     */
+    private void handleStartGame() {
+        if (selectedPlayerCount < 2 || selectedPlayerCount > 4) {
+            showError("Please select 2-4 players");
+            return;
+        }
+        
+        controller.createPlayers(selectedPlayerCount);
+        controller.initializeGame();
+        
+        showGamePanel();
+        updateFullView();
+        showMessage("Game started! " + controller.getCurrentPlayer().getName() + "'s turn.");
     }
-
-
-    @Override
-    public void handlePlay(ActionEvent e) {
-        JButton button = (JButton) e.getSource();
-        Card_Model card = (Card_Model) button.getClientProperty("card");
-        if (card.getColour() == Card_Model.CardColour.WILD){
-            askWildCard(card);
-        } else if (controller.playCard(card)) {
-            ImageIcon icon = new ImageIcon(card.getPathToImageFile());
-            topCard.setIcon(icon);
-            updateView();
-            if (card.getCardValue() == Card_Model.CardValue.SKIP) {
-                updatePlayStatus("Skipping Next Player's Turn!");
-            } else if (card.getCardValue() == Card_Model.CardValue.DRAW_ONE){
-                updatePlayStatus("Next player draws and skips turn!");
-            } else if (card.getCardValue() == Card_Model.CardValue.REVERSE){
-                updatePlayStatus("Order of players reversed!");
-            } else{
-                updatePlayStatus("Good move");
+    
+    /**
+     * Handles draw card action.
+     */
+    private void handleDrawCard() {
+        if (controller.isPendingColourSelection()) {
+            showError("Please select a color for the wild card first!");
+            return;
+        }
+        
+        String playerName = controller.getCurrentPlayer().getName();
+        controller.handleDrawCard();
+        showMessage(playerName + " drew a card. Click Next Turn when ready.");
+        nextTurnButton.setEnabled(true);
+    }
+    
+    /**
+     * Handles next turn action.
+     */
+    private void handleNextTurn() {
+        if (controller.isPendingColourSelection()) {
+            showError("Please select a color for the wild card first!");
+            return;
+        }
+        
+        controller.handleNextTurn();
+        nextTurnButton.setEnabled(false);
+        showMessage("Now it's " + controller.getCurrentPlayer().getName() + "'s turn!");
+    }
+    
+    /**
+     * Handles new round action.
+     */
+    private void handleNewRound() {
+        controller.startNewRound();
+        newRoundButton.setVisible(false);
+        newGameButton.setVisible(false);
+        nextTurnButton.setEnabled(false);
+        showMessage("New round started! " + controller.getCurrentPlayer().getName() + "'s turn.");
+    }
+    
+    /**
+     * Handles new game action.
+     */
+    private void handleNewGame() {
+        controller.resetGame();
+        selectedPlayerCount = 0;
+        startGameButton.setEnabled(false);
+        newRoundButton.setVisible(false);
+        newGameButton.setVisible(false);
+        showSetupPanel();
+    }
+    
+    /**
+     * Handles card play action.
+     */
+    private void handleCardPlay(int cardIndex) {
+        if (controller.isPendingColourSelection()) {
+            showError("Please select a color for the wild card first!");
+            return;
+        }
+        
+        String playerName = controller.getCurrentPlayer().getName();
+        
+        boolean success = controller.playCard(cardIndex);
+        
+        if (success) {
+            if (controller.isPendingColourSelection()) {
+                showMessage(playerName + " played a WILD card! Choose a color.");
+            } else {
+                showMessage(playerName + " played a card!");
+                nextTurnButton.setEnabled(true);
             }
         } else {
-            updatePlayStatus("Invalid Move");
-        }
-        if (controller.checkForWinner()) {
-            showWinnerPopup();
-            nextButton.setEnabled(false);
-            drawButton.setEnabled(false);
+            showError("Invalid card play! Card doesn't match color or value.");
         }
     }
-
+    
+    /**
+     * Handles color selection for wild cards.
+     */
+    private void handleColorSelection(Card_Model.CardColour color) {
+        boolean success = controller.setWildCardColour(color);
+        
+        if (success) {
+            showMessage("Color set to " + color + ". Click Next Turn when ready.");
+            nextTurnButton.setEnabled(true);
+        } else {
+            showError("Failed to set color!");
+        }
+    }
+    
+    /**
+     * Creates a colored button for wild card color selection.
+     */
+    private JButton createColorButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setBackground(color);
+        button.setForeground(Color.WHITE);
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        return button;
+    }
+    
+    /**
+     * Shows the setup panel.
+     */
+    private void showSetupPanel() {
+        getContentPane().removeAll();
+        add(setupPanel);
+        revalidate();
+        repaint();
+    }
+    
+    /**
+     * Shows the main game panel.
+     */
+    private void showGamePanel() {
+        getContentPane().removeAll();
+        add(mainPanel);
+        revalidate();
+        repaint();
+    }
+    
+    /**
+     * Updates the full view with current game state.
+     */
+    private void updateFullView() {
+        // Update labels
+        if (controller.getActiveCard() != null) {
+            activeCardLabel.setText("Active Card: " + controller.getActiveCard().toString());
+        }
+        matchColorLabel.setText("Match Color: " + controller.getMatchColour());
+        deckCountLabel.setText("Deck: " + controller.getRemainingDeckCards());
+        
+        Player_Model currentPlayer = controller.getCurrentPlayer();
+        if (currentPlayer != null) {
+            currentPlayerLabel.setText("Current Player: " + currentPlayer.getName());
+            updatePlayerHand(currentPlayer.getHand());
+        }
+        
+        // Update scores
+        updateScores();
+        
+        // Update color selection visibility
+        colorSelectionPanel.setVisible(controller.isPendingColourSelection());
+    }
+    
+    /**
+     * Updates the player's hand display.
+     */
+    private void updatePlayerHand(List<Card_Model> hand) {
+        playerHandPanel.removeAll();
+        cardButtons.clear();
+        
+        for (int i = 0; i < hand.size(); i++) {
+            Card_Model card = hand.get(i);
+            JButton cardButton = createCardButton(card, i);
+            
+            final int index = i;
+            cardButton.addActionListener(e -> handleCardPlay(index));
+            
+            cardButtons.add(cardButton);
+            playerHandPanel.add(cardButton);
+        }
+        
+        playerHandPanel.revalidate();
+        playerHandPanel.repaint();
+    }
+    
+    /**
+     * Creates a button representing a card.
+     */
+    private JButton createCardButton(Card_Model card, int index) {
+        JButton button = new JButton("<html><center>" + 
+                                     card.getColour() + "<br>" + 
+                                     card.getCardValue() + "</center></html>");
+        button.setPreferredSize(new Dimension(100, 140));
+        
+        Color bgColor = getColorForCard(card.getColour());
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setOpaque(true);
+        button.setBorderPainted(true);
+        button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        
+        return button;
+    }
+    
+    /**
+     * Gets the display color for a card color.
+     */
+    private Color getColorForCard(Card_Model.CardColour colour) {
+        return switch (colour) {
+            case RED -> new Color(220, 20, 60);
+            case BLUE -> new Color(30, 144, 255);
+            case GREEN -> new Color(34, 139, 34);
+            case YELLOW -> new Color(255, 215, 0);
+            case WILD -> new Color(50, 50, 50);
+        };
+    }
+    
+    /**
+     * Updates the scores display.
+     */
+    private void updateScores() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== SCORES ===\n\n");
+        
+        for (Player_Model player : controller.getParticipants()) {
+            sb.append(player.getName()).append(": ")
+              .append(player.getScore()).append(" pts\n");
+        }
+        
+        sb.append("\n=== CARDS IN HAND ===\n\n");
+        for (Player_Model player : controller.getParticipants()) {
+            sb.append(player.getName()).append(": ")
+              .append(player.getNumCards()).append(" cards\n");
+        }
+        
+        gameStateArea.setText(sb.toString());
+    }
+    
+    /**
+     * Displays a message dialog.
+     */
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(this, message);
+    }
+    
+    /**
+     * Displays an error message.
+     */
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
+    // ========== UnoViewHandler Implementation ==========
+    
+    /**
+     * Handles game state update events from the controller.
+     */
     @Override
-    public void handleNextTurn(ActionEvent e) {
-        controller.actionPerformed(e);
-        updateView();
-        firstRound = false;
+    public void handleGameUpdate(UnoGameEvent event) {
+        updateFullView();
     }
-
-    public static void main(String[] args){
-        Uno_View view = new Uno_View();
+    
+    /**
+     * Handles round end events.
+     */
+    @Override
+    public void handleRoundEnd(UnoGameEvent event) {
+        showMessage("Round ended! Check the scores.");
+        newRoundButton.setVisible(true);
+        newGameButton.setVisible(true);
+    }
+    
+    /**
+     * Handles game over events.
+     */
+    @Override
+    public void handleGameOver(UnoGameEvent event) {
+        Player_Model winner = event.getPlayer();
+        if (winner != null) {
+            showMessage("🎉 GAME OVER! " + winner.getName() + " wins with " + 
+                       winner.getScore() + " points!");
+        }
+        newRoundButton.setVisible(false);
+        newGameButton.setVisible(true);
     }
 }
