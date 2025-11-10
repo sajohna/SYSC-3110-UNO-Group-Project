@@ -1,8 +1,20 @@
 import java.util.EventObject;
 
 /**
- * Add class comments later
- * 
+ * Event object for UNO game state changes.
+ * Encapsulates different types of game events (card plays, player changes, status updates).
+ *
+ * Data Structures:
+ *   - Card_Model card: Single card reference for card-specific events.
+ *       Used for:
+ *         * Passing played card information to views
+ *   - Player_Model player: Single player reference for player-specific events.
+ *       Used for:
+ *         * Identifying winner or current player in events
+ *   - Uno_Model.GameStatus gameStatus: Enum representing current game state.
+ *       Used for:
+ *         * Communicating state transitions (NOT_STARTED, IN_PROGRESS, ROUND_ENDED, GAME_OVER)
+ *
  * @author Lasya Erukulla
  * @version 2.0 Milestone 2
  */

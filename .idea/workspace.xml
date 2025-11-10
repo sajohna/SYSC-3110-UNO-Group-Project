@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7fc99ed0-8093-4a6e-b6cc-96bf09449c9c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Test Files/Uno_ModelTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/Test Files/Uno_ModelTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UnoViewHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/UnoViewHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Uno_Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/Uno_Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Uno_Event.java" beforeDir="false" afterPath="$PROJECT_DIR$/Uno_Event.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Uno_Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/Uno_Model.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Uno_View.java" beforeDir="false" afterPath="$PROJECT_DIR$/Uno_View.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Uno_View.executor": "Run",
+    "JUnit.Uno_ModelTest.executor": "Run",
+    "git-widget-placeholder": "main"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <servers />
+  </component>
+</project>

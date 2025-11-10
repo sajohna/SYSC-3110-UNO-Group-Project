@@ -1,9 +1,19 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Add class comments later
- * 
+ * Controller class for UNO game implementing MVC pattern.
+ * Handles user input, coordinates between model and view, and manages game flow.
+ *
+ * Data Structures:
+ *   - List<UnoViewHandler> handlers: ArrayList storing view observers.
+ *       Chosen for:
+ *         * Dynamic number of views that can register for updates
+ *         * Sequential iteration when broadcasting events to all views
+ *         * Efficient add operation when registering new handlers
+ *
  * @author Lasya Erukulla
  * @version 2.0 Milestone 2
  */
@@ -16,7 +26,7 @@ public class Uno_Controller implements ActionListener {
         handlers = new ArrayList<>();
     }
 
-    /** 
+    /**
      * Notify view handlers about updates in the game
      */
     public void addViewHandler(UnoViewHandler handler) {
@@ -54,7 +64,7 @@ public class Uno_Controller implements ActionListener {
 
     public void createPlayers(int numPlayers){
         for (int i = 0; i < numPlayers; i++) {
-            Player_Model player = new Player_Model("Player " + i));
+            Player_Model player = new Player_Model("Player " + i);
             uno.addPlayer(player);
         }
     }
@@ -63,7 +73,7 @@ public class Uno_Controller implements ActionListener {
         if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
             return false;
         }
-        
+
         if (uno.isPendingColourSelection()) {
             return false;
         }
@@ -74,7 +84,7 @@ public class Uno_Controller implements ActionListener {
             if (uno.isGameOver()) {
                 notifyGameOver();
             } else if (uno.isRoundEnded()) {
-                notifyRoundEnd();
+                notifyRoundOver();
             }
             return true;
         }
@@ -107,46 +117,47 @@ public class Uno_Controller implements ActionListener {
         notifyGameUpdate();
     }
 
-
-    public boolean playWildCard(Card_Model.CardColour colour){
+    public boolean setWildCardColour(Card_Model.CardColour colour){
         if (!uno.isPendingColourSelection()) {
             return false;
         }
 
-        boolean success = uno.setWildCardColour(colour);
+        boolean success = uno.setActiveColour(colour);
         if (success){
-            uno.setActiveColour(colour);
             notifyGameUpdate();
             if (uno.isGameOver()) {
                 notifyGameOver();
             } else if (uno.isRoundEnded()) {
-                notifyRoundEnd();
+                notifyRoundOver();
             }
             return true;
         }
         return false;
+    }
 
+    public boolean isPendingColourSelection() {
+        return uno.isPendingColourSelection();
     }
 
     /** Notify Updates */
     public void notifyGameUpdate() {
         Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
         for (UnoViewHandler handler : handlers) {
-            handler.onGameUpdate(event);
+            handler.handleGameUpdate(event);
         }
     }
 
     public void notifyGameOver() {
-        Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
+        Uno_Event event = new Uno_Event(uno, uno.getWinner());
         for (UnoViewHandler handler : handlers) {
-            handler.onGameOver(event);
+            handler.handleGameOver(event);
         }
     }
 
     public void notifyRoundOver() {
         Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
         for (UnoViewHandler handler : handlers) {
-            handler.onRoundOver(event);
+            handler.handleRoundEnd(event);
         }
     }
 
@@ -178,5 +189,9 @@ public class Uno_Controller implements ActionListener {
     public Uno_Model.SpecialCardEffect checkActionCard(){
         Uno_Model.SpecialCardEffect effect = uno.identifySpecialCard();
         return effect;
+    }
+
+    public List<Player_Model> getParticipants(){
+        return uno.getParticipants();
     }
 }
