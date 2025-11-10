@@ -55,7 +55,8 @@ public class Card_Model {
         }
 
     }
-    
+
+    private String pathToImageFile;
     private final CardValue VALUE;
     private final CardColour COLOUR;
 
@@ -68,6 +69,13 @@ public class Card_Model {
     public Card_Model(CardValue cardValue, CardColour cardColour) {
         this.VALUE = cardValue;
         this.COLOUR = cardColour;
+    }
+
+    /**
+     * Sets the path to the Image file
+     */
+    public void setPathToImageFile() {
+        this.pathToImageFile = "images/" + this.toString() + ".jpg";
     }
 
     /**
@@ -92,12 +100,21 @@ public class Card_Model {
 
 
     /**
+     * Gets the path to the image file.
+     *
+     * @return The path to the image file.
+     */
+    public String getPathToImageFile() {
+        return this.pathToImageFile;
+    }
+
+    /**
      * Returns a string representation of the card, including its color and value.
      *
      * @return A string representation of the card in the format "COLOR VALUE" (e.g., "RED NUMBER").
      */
     @Override
     public String toString() {
-        return " " + COLOUR + " " + VALUE;
+        return  COLOUR + "_" + VALUE;
     }
 }

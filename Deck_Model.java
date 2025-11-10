@@ -88,6 +88,9 @@ public class Deck_Model {
                 }
 
             }
+            for (Card_Model card: drawPile) {
+                card.setPathToImageFile();
+            }
         }
         Collections.shuffle(drawPile);
     }
