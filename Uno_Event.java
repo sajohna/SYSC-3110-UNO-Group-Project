@@ -1,26 +1,26 @@
 import java.util.EventObject;
 
-public class UnoGameEvent extends EventObject {
+public class Uno_Event extends EventObject {
     private Card_Model card;
     private Player_Model player;
     private Uno_Model.GameStatus gameStatus;
 
-    public UnoGameEvent(Uno_Model source)
+    public Uno_Event(Uno_Model source)
     {
         super(source);
     }
 
-    public UnoGameEvent(Uno_Model source, Card_Model card){
+    public Uno_Event(Uno_Model source, Card_Model card){
         super(source);
         this.card=card;
     }
 
-    public UnoGameEvent(Uno_Model source, Player_Model player){
+    public Uno_Event(Uno_Model source, Player_Model player){
         super(source);
         this.player=player;
     }
 
-    public UnoGameEvent(Uno_Model source, Uno_Model.GameStatus gameStatus){
+    public Uno_Event(Uno_Model source, Uno_Model.GameStatus gameStatus){
         super(source);
         this.gameStatus=gameStatus;
     }

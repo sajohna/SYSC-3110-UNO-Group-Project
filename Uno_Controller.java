@@ -1,10 +1,10 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class UnoGameController implements ActionListener {
+public class Uno_Controller implements ActionListener {
     private Uno_Model uno;
 
-    public UnoGameController(Uno_Model uno) {
+    public Uno_Controller(Uno_Model uno) {
         this.uno = uno;
     }
 
