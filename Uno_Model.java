@@ -45,13 +45,13 @@ import java.util.stream.IntStream;
  *       Enables:
  *         * Elegant bidirectional turn traversal with single formula
  *
- *  Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
- * Ideally, the model should only have the game logic which is then implemented with a GUI through the Controller and Viewer. 
- * This will be implemented in the next milestone. There will be a play() method implemented in the next milestone to replace main in this class so that the game attributes can be initalized by user. For now it is coded in main due to the lack of a controller and viewer class.
+ *   - boolean hasDrawnThisTurn: Tracks if current player has drawn during their turn.
+ *         * Prevents multiple draws per turn
+ *         * Simple boolean flag reset on turn change
  *
  *
  * @author Saan John
- * @version 1.0 - Milestone 1
+ * @version 2.0 - Milestone 2
  */
 public class Uno_Model {
     private static final int CARDS_PER_PLAYER = 7;
@@ -75,6 +75,7 @@ public class Uno_Model {
     private int playDirection;
     private boolean pendingColourSelection;
     private Map<Player_Model, Integer> roundScores;
+    private boolean hasDrawnThisTurn;
 
     /**
      * Constructs a new Uno_Model and initializes game state.
@@ -88,6 +89,7 @@ public class Uno_Model {
         playDirection = 1;
         pendingColourSelection = false;
         roundScores = new HashMap<>();
+        hasDrawnThisTurn = false;
     }
 
     // ======== GETTERS ========
@@ -164,6 +166,22 @@ public class Uno_Model {
         return victor;
     }
 
+    /**
+     * Returns the current player's index in the participants list.
+     * @return the index of the current player
+     */
+    public int getCurrentPlayerIndex() {
+        return turnIdx;
+    }
+
+    /**
+     * Checks if the current player has already drawn a card this turn.
+     * @return true if player has drawn, false otherwise
+     */
+    public boolean hasDrawn() {
+        return hasDrawnThisTurn;
+    }
+
     // ======== SETUP ========
 
     /**
@@ -228,9 +246,11 @@ public class Uno_Model {
     /**
      * Advances to the next player's turn based on current play direction.
      * Wraps around to the beginning of the player list when necessary.
+     * Resets the hasDrawn flag for the new turn.
      */
     public void advanceToNextTurn() {
         turnIdx = (turnIdx + playDirection + participants.size()) % participants.size();
+        hasDrawnThisTurn = false;
     }
 
     /**
@@ -266,6 +286,15 @@ public class Uno_Model {
     }
 
     /**
+     * Selects and validates a card for play (alternative interface for controller).
+     * @param card the Card_Model to select
+     * @return true if card is valid and can be played, false otherwise
+     */
+    public boolean selectCard(Card_Model card) {
+        return isValidPlay(card);
+    }
+
+    /**
      * Attempts to play a card from the current player's hand.
      * Validates the card index and legality of the play.
      * Processes special card effects and checks for round end.
@@ -297,6 +326,7 @@ public class Uno_Model {
      */
     public TurnAction drawCardAndPass() {
         getCurrentPlayer().drawCard(stack);
+        hasDrawnThisTurn = true;
         advanceToNextTurn();
         return TurnAction.TURN_PASSED;
     }
@@ -307,6 +337,7 @@ public class Uno_Model {
      */
     public TurnAction drawCard() {
         getCurrentPlayer().drawCard(stack);
+        hasDrawnThisTurn = true;
         return TurnAction.CARD_DRAWN;
     }
 
@@ -321,6 +352,17 @@ public class Uno_Model {
             case SKIP -> skipNextPlayer();
             case DRAW_ONE -> { forceNextPlayerDraw(1); skipNextPlayer(); }
             default -> advanceToNextTurn();
+        }
+    }
+
+    /**
+     * Checks and processes special action cards.
+     * Can be called by controller after a card is played.
+     */
+    public void checkActionCard() {
+        SpecialCardEffect effect = identifySpecialCard();
+        if (!pendingColourSelection) {
+            processSpecialCardEffect(effect);
         }
     }
 
@@ -340,6 +382,16 @@ public class Uno_Model {
         int nextIdx = (turnIdx+playDirection+participants.size())%participants.size();
         Player_Model next = participants.get(nextIdx);
         for(int i=0;i<n;i++) next.drawCard(stack);
+    }
+
+    /**
+     * Forces a specific player to draw N cards (for controller use).
+     * @param n number of cards to draw
+     * @param playerIndex index of the player who should draw
+     */
+    public void drawN(int n, int playerIndex) {
+        Player_Model targetPlayer = participants.get(playerIndex);
+        for(int i=0;i<n;i++) targetPlayer.drawCard(stack);
     }
 
     /**
@@ -374,13 +426,21 @@ public class Uno_Model {
     }
 
     /**
+     * Processes a wild card colour selection (alternative interface).
+     * @param colour the CardColour to set
+     */
+    public void wildCard(Card_Model.CardColour colour) {
+        setActiveColour(colour);
+    }
+
+    /**
      * Ends the current round when a player empties their hand.
      * Calculates points, updates scores, and checks if game is over.
      * @param winner the Player_Model who emptied their hand
      */
     private void endRound(Player_Model winner){
         int points = participants.stream().filter(p->p!=winner).flatMap(p->p.getHand().stream()).mapToInt(c->c.getCardValue().cardScore).sum();
-        winner.setScore(points);
+        winner.setScore(winner.getScore() + points);
         roundScores.put(winner, points);
         if(winner.getScore()>=TARGET_SCORE){ victor=winner; status=GameStatus.GAME_OVER; }
         else status=GameStatus.ROUND_ENDED;
@@ -389,6 +449,7 @@ public class Uno_Model {
     /**
      * Starts a new round by clearing hands, resetting the deck, and re-initializing.
      * Preserves player scores from previous rounds.
+     * Called when score is insufficient to win.
      */
     public void startNewRound(){
         participants.forEach(p->p.getHand().clear());
@@ -398,8 +459,25 @@ public class Uno_Model {
         pendingColourSelection=false;
         activeCard=null;
         initialCard=null;
+        hasDrawnThisTurn=false;
         roundScores.clear();
         initializeGame();
+    }
+
+    /**
+     * Resets the round when a player wins but doesn't have enough points.
+     * Clears hands and redeals cards without resetting scores.
+     */
+    public void notEnoughPoints() {
+        participants.forEach(p->p.getHand().clear());
+        stack=new Deck_Model();
+        distributeInitialCards();
+        do { initialCard = stack.draw(); }
+        while (initialCard.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO);
+        activeCard = initialCard;
+        matchColour = initialCard.getColour();
+        matchType = initialCard.getCardValue();
+        hasDrawnThisTurn = false;
     }
 
     /**
@@ -416,6 +494,7 @@ public class Uno_Model {
         initialCard=null;
         victor=null;
         status=GameStatus.NOT_STARTED;
+        hasDrawnThisTurn=false;
         roundScores.clear();
     }
 
@@ -437,13 +516,11 @@ public class Uno_Model {
         return sb.toString();
     }
 
-    // ======== MAIN METHOD ======== (for testing purposes)
-
-    /**
-     * Main method for manual testing and demonstration of game functionality.
+    /*
+     * Main method for manual testing and demonstration of game functionality. - NOT USED ANYMORE, Uno_View will replace this
      * Creates a simple two-player game with console input for playing cards.
      * @param args command line arguments (not used)
-     */
+
     public static void main(String[] args){
         Uno_Model game = new Uno_Model();
         Player_Model alice = new Player_Model("Alice");
@@ -483,6 +560,5 @@ public class Uno_Model {
             }
         }
         System.out.println("\n🏆 GAME OVER! Winner: "+game.getWinner().getName());
-    }
+    }*/
 }
-
