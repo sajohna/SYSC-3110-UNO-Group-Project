@@ -1,5 +1,11 @@
 import java.util.EventObject;
 
+/**
+ * Add class comments later
+ * 
+ * @author Lasya Erukulla
+ * @version 2.0 Milestone 2
+ */
 public class Uno_Event extends EventObject {
     private Card_Model card;
     private Player_Model player;

@@ -1,106 +1,182 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Add class comments later
+ * 
+ * @author Lasya Erukulla
+ * @version 2.0 Milestone 2
+ */
 public class Uno_Controller implements ActionListener {
     private Uno_Model uno;
+    private List<UnoViewHandler> handlers;
 
     public Uno_Controller(Uno_Model uno) {
         this.uno = uno;
+        handlers = new ArrayList<>();
+    }
+
+    /** 
+     * Notify view handlers about updates in the game
+     */
+    public void addViewHandler(UnoViewHandler handler) {
+        handlers.add(handler);
+    }
+
+    /** Game controls */
+    public void initializeGame(){
+        uno.initializeGame();
+    }
+
+    public void startNewRound(){
+        uno.startNewRound();
+        notifyGameUpdate();
+    }
+
+    public void resetGame(){
+        uno.resetGame();
+        notifyGameUpdate();
     }
 
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
         switch(command){
             case "drawCard":
-                uno.getCurrentPlayer().getName();
-                uno.drawCard();
+                handleDrawCard();
                 break;
             case "nextPlayer":
-                uno.advanceToNextTurn();
+                handleNextPlayer();
                 break;
             default:
                 break;
         }
     }
 
-    public boolean playCard(Card_Model card){
-        checkForWinner();
-        keepPlaying();
-        if(uno.selectCard(card)){  /*needs to be implemented in model*/
-            //model.getCurrentPlayer().getMyCards().remove(card);
-            uno.getCurrentPlayer().removeCard(card);
-            uno.checkActionCard(); /*needs to be implemented in model*/
+    public void createPlayers(int numPlayers){
+        for (int i = 0; i < numPlayers; i++) {
+            Player_Model player = new Player_Model("Player " + i));
+            uno.addPlayer(player);
+        }
+    }
+
+    public boolean playCard(int cardIndex) {
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            return false;
+        }
+        
+        if (uno.isPendingColourSelection()) {
+            return false;
+        }
+
+        Uno_Model.TurnAction result = uno.playCard(cardIndex);
+        if (result == Uno_Model.TurnAction.CARD_PLAYED) {
+            notifyGameUpdate();
+            if (uno.isGameOver()) {
+                notifyGameOver();
+            } else if (uno.isRoundEnded()) {
+                notifyRoundEnd();
+            }
             return true;
         }
         return false;
     }
-    public boolean checkForWinner() {
-        System.out.println("Points = " + uno.getCurrentPlayer().getScore());
-        if (checkWinner()) {
-            System.out.println("Winner found");
+
+    public void handleDrawCard() {
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS){
+            return;
+        }
+
+        if (uno.isPendingColourSelection()) {
+            return;
+        }
+
+        uno.drawCard();
+        notifyGameUpdate();
+    }
+
+    public void handleNextPlayer() {
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS){
+            return;
+        }
+
+        if (uno.isPendingColourSelection()) {
+            return;
+        }
+
+        uno.advanceToNextTurn();
+        notifyGameUpdate();
+    }
+
+
+    public boolean playWildCard(Card_Model.CardColour colour){
+        if (!uno.isPendingColourSelection()) {
+            return false;
+        }
+
+        boolean success = uno.setWildCardColour(colour);
+        if (success){
+            uno.setActiveColour(colour);
+            notifyGameUpdate();
+            if (uno.isGameOver()) {
+                notifyGameOver();
+            } else if (uno.isRoundEnded()) {
+                notifyRoundEnd();
+            }
             return true;
         }
-        else
-            System.out.println("no winner found");
         return false;
+
     }
 
-    public boolean stopPlaying(){
-        if (checkWinner() && uno.getCurrentPlayer().getScore() >= 500) {
-            return true;
+    /** Notify Updates */
+    public void notifyGameUpdate() {
+        Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
+        for (UnoViewHandler handler : handlers) {
+            handler.onGameUpdate(event);
         }
-        else return false;
     }
-    public boolean keepPlaying(){
-        if (checkWinner() && uno.getCurrentPlayer().getScore() < 500) {
-            uno.notEnoughPoints(); /*needs to be implemented in model*/
-            System.out.println("not enough points. points = " + uno.getCurrentPlayer().getScore());
-            return true;
+
+    public void notifyGameOver() {
+        Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
+        for (UnoViewHandler handler : handlers) {
+            handler.onGameOver(event);
         }
-        else return false;
     }
 
-    public void playWild(Card_Model card, Card_Model.CardColour colour){
-        wildCard(colour);
-        uno.getCurrentPlayer().getMyCards().remove(card); /*needs to be implemented in model*/
-
-        if (card.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO){
-            uno.drawN(2,getIndex()); /*needs to be implemented in model*/
+    public void notifyRoundOver() {
+        Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
+        for (UnoViewHandler handler : handlers) {
+            handler.onRoundOver(event);
         }
-
     }
 
+    /** Getters and Setters */
     public Player_Model getCurrentPlayer(){
         return uno.getCurrentPlayer();
     }
 
-    /*needs to be implemented in model*/
-    public boolean hasDrawn(){
-        return uno.hasDrawn();
+    public Card_Model getActiveCard(){
+        return uno.getActiveCard();
     }
 
-    /*needs to be implemented in model*/
-    public void setHasDrawn(){
-        uno.getCurrentPlayer().setHasDrawn(true);
+    public Card_Model.CardColour getMatchColour(){
+        return uno.getMatchColour();
     }
 
-    public void wildCard(Card_Model.CardColour colour){
-        uno.wildCard(colour); /*needs to be implemented in model*/
+    public int getRemainingDeckCards(){
+        return uno.getRemainingDeckCards();
     }
 
-    public void checkActionCard(){
+    public Uno_Model.GameStatus getGameStatus(){
+        return uno.getGameStatus();
+    }
+
+    public Player_Model getWinner(){
+        return uno.getWinner();
+    }
+
+    public Uno_Model.SpecialCardEffect checkActionCard(){
         Uno_Model.SpecialCardEffect effect = uno.identifySpecialCard();
-    }
-
-    /*needs to be implemented in model*/
-    public int getIndex(){
-        return uno.getCurrentPlayerIndex();
-    }
-
-    public boolean checkWinner(){
-        if(uno.getCurrentPlayer().getNumCards() == 0){
-            return true;
-        }
-        else return false;
+        return effect;
     }
 }
