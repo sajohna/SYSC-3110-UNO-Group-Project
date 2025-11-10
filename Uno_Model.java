@@ -69,6 +69,7 @@ public class Uno_Model {
     private Card_Model initialCard;
     private Card_Model.CardValue matchType;
     private Card_Model.CardColour matchColour;
+    private Player_Model currentPlayer;
     private Player_Model victor;
     private int turnIdx;
     private GameStatus status;
@@ -81,7 +82,7 @@ public class Uno_Model {
      * Constructs a new Uno_Model and initializes game state.
      * Sets up empty player list, new deck, and default game parameters.
      */
-    public Uno_Model() {
+    public Uno_Model(int numPlayers) {
         participants = new ArrayList<>();
         stack = new Deck_Model();
         turnIdx = 0;
@@ -90,6 +91,7 @@ public class Uno_Model {
         pendingColourSelection = false;
         roundScores = new HashMap<>();
         hasDrawnThisTurn = false;
+        initializeGame(numPlayers);
     }
 
     // ======== GETTERS ========
@@ -108,6 +110,14 @@ public class Uno_Model {
      */
     public Card_Model getActiveCard() {
         return activeCard;
+    }
+
+    /**
+     * Returns the first at the top of the discard pile.
+     * @return the initial Card_Model, or null if game hasn't started
+     */
+    public Card_Model getInitialCard() {
+        return initialCard;
     }
 
     /**
@@ -184,6 +194,14 @@ public class Uno_Model {
 
     // ======== SETUP ========
 
+    public void createPlayers(int n){
+        this.participants = new ArrayList<>(n);
+        for(int i=0; i<n; i++){
+            Player_Model player = new Player_Model("Player "+i);
+            participants.add(player);
+        }
+    }
+
     /**
      * Adds a player to the game.
      * Can only be called before the game starts and when under max player limit.
@@ -203,7 +221,8 @@ public class Uno_Model {
      * and processing any special effects from the starting card.
      * Sets game status to IN_PROGRESS.
      */
-    public void initializeGame() {
+    public void initializeGame(int numPlayers) {
+        createPlayers(numPlayers);
         distributeInitialCards();
         do { initialCard = stack.draw(); }
         while (initialCard.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO);
@@ -451,7 +470,7 @@ public class Uno_Model {
      * Preserves player scores from previous rounds.
      * Called when score is insufficient to win.
      */
-    public void startNewRound(){
+    public void startNewRound(int numPlayers){
         participants.forEach(p->p.getHand().clear());
         stack=new Deck_Model();
         turnIdx=0;
@@ -461,7 +480,7 @@ public class Uno_Model {
         initialCard=null;
         hasDrawnThisTurn=false;
         roundScores.clear();
-        initializeGame();
+        initializeGame(numPlayers);
     }
 
     /**

@@ -70,14 +70,6 @@ public class Uno_Controller implements ActionListener {
 
     }
 
-    public void createPlayers(int n){
-        uno = new Uno_Model();
-        for(int i=0; i<n; i++){
-            Player_Model player = new Player_Model("Player "+i);
-            uno.addPlayer(player);
-        }
-    }
-
     public Player_Model getCurrentPlayer(){
         return uno.getCurrentPlayer();
     }
