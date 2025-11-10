@@ -175,6 +175,22 @@ public class Uno_Controller implements ActionListener {
         return uno.getWinner();
     }
 
+    public boolean isPendingColourSelection() {
+        return model.isPendingColourSelection();
+    }
+    
+    public boolean isRoundEnded() {
+        return model.isRoundEnded();
+    }
+    
+    public boolean isGameOver() {
+        return model.isGameOver();
+    }
+
+    public List<Player_Model> getPlayers() {
+        return model.getParticipants();
+    }
+
     public Uno_Model.SpecialCardEffect checkActionCard(){
         Uno_Model.SpecialCardEffect effect = uno.identifySpecialCard();
         return effect;
