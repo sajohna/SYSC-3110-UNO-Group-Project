@@ -25,7 +25,7 @@ import java.util.List;
  * @author Lucas Baker
  * @version 2.0 - Milestone 2
  */
-public class Uno_View extends JFrame implements UnoViewHandler {
+public class Uno_View extends JFrame implements Uno_ViewHandler {
     private Uno_Controller controller;
 
     // Main panels

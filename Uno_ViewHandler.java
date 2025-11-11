@@ -5,7 +5,7 @@
  * @author Lucas Baker
  * @version 2.0 - Milestone 2
  */
-public interface UnoViewHandler {
+public interface Uno_ViewHandler {
 
     /**
      * Handles game state update events.

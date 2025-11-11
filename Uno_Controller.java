@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class Uno_Controller implements ActionListener {
     private Uno_Model uno;
-    private List<UnoViewHandler> handlers;
+    private List<Uno_ViewHandler> handlers;
 
     public Uno_Controller(Uno_Model uno) {
         this.uno = uno;
@@ -29,7 +29,7 @@ public class Uno_Controller implements ActionListener {
     /**
      * Notify view handlers about updates in the game
      */
-    public void addViewHandler(UnoViewHandler handler) {
+    public void addViewHandler(Uno_ViewHandler handler) {
         handlers.add(handler);
     }
 
@@ -138,21 +138,21 @@ public class Uno_Controller implements ActionListener {
     /** Notify Updates */
     public void notifyGameUpdate() {
         Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
-        for (UnoViewHandler handler : handlers) {
+        for (Uno_ViewHandler handler : handlers) {
             handler.handleGameUpdate(event);
         }
     }
 
     public void notifyGameOver() {
         Uno_Event event = new Uno_Event(uno, uno.getWinner());
-        for (UnoViewHandler handler : handlers) {
+        for (Uno_ViewHandler handler : handlers) {
             handler.handleGameOver(event);
         }
     }
 
     public void notifyRoundOver() {
         Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
-        for (UnoViewHandler handler : handlers) {
+        for (Uno_ViewHandler handler : handlers) {
             handler.handleRoundEnd(event);
         }
     }
@@ -183,19 +183,19 @@ public class Uno_Controller implements ActionListener {
     }
 
     public boolean isPendingColourSelection() {
-        return   uno.isPendingColourSelection();
+        return uno.isPendingColourSelection();
     }
     
     public boolean isRoundEnded() {
-        return   uno.isRoundEnded();
+        return uno.isRoundEnded();
     }
     
     public boolean isGameOver() {
-        return   uno.isGameOver();
+        return uno.isGameOver();
     }
 
     public List<Player_Model> getPlayers() {
-        return   uno.getParticipants();
+        return uno.getParticipants();
     }
 
     public Uno_Model.SpecialCardEffect checkActionCard(){
