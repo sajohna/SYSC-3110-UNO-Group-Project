@@ -314,4 +314,46 @@ public class Uno_ModelTest {
 
         assertFalse(game.isRoundEnded());
     }
+
+    @Test
+    @DisplayName("identifySpecialCard returns NONE for regular card")
+    void testIdentifySpecialCardForRegularCard() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        Card_Model regular = new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED);
+        // Manually set active card to a normal card
+        try {
+            var field = Uno_Model.class.getDeclaredField("activeCard");
+            field.setAccessible(true);
+            field.set(game, regular);
+        } catch (Exception e) {
+            fail("Reflection failed to set activeCard");
+        }
+
+        assertEquals(Uno_Model.SpecialCardEffect.NONE, game.identifySpecialCard());
+    }
+
+    @Test
+    @DisplayName("startNewRound resets round but keeps players and scores")
+    void testStartNewRoundResetsRoundKeepsPlayers() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        // Simulate score gain
+        player1.setScore(200);
+
+        game.startNewRound();
+
+        assertEquals(Uno_Model.GameStatus.IN_PROGRESS, game.getGameStatus());
+        assertTrue(game.getParticipants().contains(player1));
+        assertEquals(200, player1.getScore());
+        assertNotNull(game.getActiveCard());
+        assertNotEquals(Card_Model.CardColour.WILD, game.getMatchColour());
+    }
+
+
+
 }

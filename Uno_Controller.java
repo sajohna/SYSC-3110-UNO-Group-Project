@@ -135,10 +135,6 @@ public class Uno_Controller implements ActionListener {
         return false;
     }
 
-    public boolean isPendingColourSelection() {
-        return uno.isPendingColourSelection();
-    }
-
     /** Notify Updates */
     public void notifyGameUpdate() {
         Uno_Event event = new Uno_Event(uno, uno.getGameStatus());
@@ -187,19 +183,19 @@ public class Uno_Controller implements ActionListener {
     }
 
     public boolean isPendingColourSelection() {
-        return model.isPendingColourSelection();
+        return   uno.isPendingColourSelection();
     }
     
     public boolean isRoundEnded() {
-        return model.isRoundEnded();
+        return   uno.isRoundEnded();
     }
     
     public boolean isGameOver() {
-        return model.isGameOver();
+        return   uno.isGameOver();
     }
 
     public List<Player_Model> getPlayers() {
-        return model.getParticipants();
+        return   uno.getParticipants();
     }
 
     public Uno_Model.SpecialCardEffect checkActionCard(){
