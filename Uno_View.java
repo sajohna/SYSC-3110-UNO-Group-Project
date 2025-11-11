@@ -452,7 +452,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             updateTopCardDisplay(controller.getActiveCard());
         }
         matchColorLabel.setText("Match Color: " + controller.getMatchColour());
-        deckCountLabel.setText("Deck: " + controller.getRemainingDeckCards());
+        deckCountLabel.setText("Deck: " + controller.getRemainingDrawPileCards());
 
         Player_Model currentPlayer = controller.getCurrentPlayer();
         if (currentPlayer != null) {

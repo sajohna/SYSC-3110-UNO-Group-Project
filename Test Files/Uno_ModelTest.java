@@ -109,7 +109,7 @@ public class Uno_ModelTest {
         assertNotNull(game.getActiveCard());
         assertNotNull(game.getMatchColour());
         assertNotEquals(Card_Model.CardValue.WILD_DRAW_TWO, game.getActiveCard().getCardValue());
-        assertTrue(game.getRemainingDeckCards() > 0);
+        assertTrue(game.getRemainingDrawPileCards() > 0);
     }
 
     /**

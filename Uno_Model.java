@@ -136,7 +136,7 @@ public class Uno_Model {
      * Returns the number of cards remaining in the draw pile.
      * @return the count of drawable cards
      */
-    public int getRemainingDeckCards() {
+    public int getRemainingDrawPileCards() {
         return stack.getNumDrawCards();
     }
 
@@ -454,7 +454,7 @@ public class Uno_Model {
         StringBuilder sb=new StringBuilder("\n=== UNO GAME STATE ===\n");
         sb.append("Active Card: ").append(activeCard).append("\n");
         sb.append("Match Colour: ").append(matchColour).append("\n");
-        sb.append("Deck Cards: ").append(getRemainingDeckCards()).append("\n");
+        sb.append("Deck Cards: ").append(getRemainingDrawPileCards()).append("\n");
         sb.append("Direction: ").append(playDirection==1?"Forward":"Reverse").append("\n");
         sb.append("Status: ").append(status).append("\n");
         Player_Model current=getCurrentPlayer();
