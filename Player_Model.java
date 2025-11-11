@@ -11,12 +11,6 @@
  *      * easy addition/removal as the hand changes during play
  * - int score: Tracks the player's total score in the game
  * - int numCards: Keeps track of the number of cards in player's hand
- * - boolean hasDrawn: Tracks whether the player has drawn a card during their current turn
- *      * Simple boolean flag for turn-based draw restrictions
- *      * Reset by controller/model at start of each turn
- * - boolean canPlay: Indicates whether the player is allowed to play a card
- *      * Used for turn management and game flow control
- *      * Toggled by controller to enforce turn order
  *
  * @author Lucas Baker
  * @version 1.0 - Milestone 1
@@ -30,8 +24,6 @@ public class Player_Model
     private ArrayList<Card_Model> hand;
     private int score;
     private int numCards;
-    private boolean hasDrawn;
-    private boolean canPlay;
 
     /**
      * Constructs a new player with an empty card list and a score of 0.
@@ -41,8 +33,6 @@ public class Player_Model
         hand = new ArrayList<Card_Model>();
         numCards = 0;
         score = 0;
-        hasDrawn = false;
-        canPlay = true;
     }
 
     /**
@@ -53,23 +43,12 @@ public class Player_Model
         hand = new ArrayList<Card_Model>();
         numCards = 0;
         score = 0;
-        hasDrawn = false;
-        canPlay = true;
     }
     /**
      * Gets list of cards in the player's hand.
      * @return ArrayList containing the player's cards.
      */
     public ArrayList<Card_Model> getHand()
-    {
-        return hand;
-    }
-
-    /**
-     * Gets list of cards in the player's hand (alternative method name for controller compatibility).
-     * @return ArrayList containing the player's cards.
-     */
-    public ArrayList<Card_Model> getMyCards()
     {
         return hand;
     }
@@ -102,24 +81,6 @@ public class Player_Model
     }
 
     /**
-     * Gets whether the player has drawn a card this turn.
-     * @return true if player has drawn, false otherwise.
-     */
-    public boolean getHasDrawn()
-    {
-        return hasDrawn;
-    }
-
-    /**
-     * Gets whether the player can play a card.
-     * @return true if player can play, false otherwise.
-     */
-    public boolean canPlay()
-    {
-        return canPlay;
-    }
-
-    /**
      * Sets the player's score.
      * @param score
      * The score to set for the player.
@@ -145,26 +106,6 @@ public class Player_Model
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    /**
-     * Sets whether the player has drawn a card this turn.
-     * @param hasDrawn
-     * True if player has drawn, false otherwise.
-     */
-    public void setHasDrawn(boolean hasDrawn)
-    {
-        this.hasDrawn = hasDrawn;
-    }
-
-    /**
-     * Sets whether the player can play a card.
-     * @param canPlay
-     * True if player can play, false otherwise.
-     */
-    public void setCanPlay(boolean canPlay)
-    {
-        this.canPlay = canPlay;
     }
 
     /**
