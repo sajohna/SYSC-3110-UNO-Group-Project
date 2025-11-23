@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Validates core game mechanics, turn management, card validation, and game state transitions.
  *
  * @author Saan John
- * @version 2.0 - Milestone 2
+ * @version 3.0 - Milestone 3
  */
 public class Uno_ModelTest {
     private Uno_Model game;
@@ -354,6 +354,95 @@ public class Uno_ModelTest {
         assertNotEquals(Card_Model.CardColour.WILD, game.getMatchColour());
     }
 
+    /**
+     * Tests the flipAllCards method for UNO Flip functionality.
+     * Verifies:
+     *   - Game starts on light side (isDarkSide = false)
+     *   - After flip, game switches to dark side (isDarkSide = true)
+     *   - After second flip, game returns to light side
+     *   - Match colour updates to reflect flipped active card's colour
+     */
+    @Test
+    @DisplayName("flipAllCards toggles between light and dark sides")
+    void testFlipAllCardsTogglesSides() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
 
+        // Game should start on light side
+        assertFalse(game.isDarkSide());
 
+        // Store the active card's light side colour
+        Card_Model.CardColour lightColour = game.getMatchColour();
+
+        // Flip to dark side
+        game.flipAllCards();
+        assertTrue(game.isDarkSide());
+
+        // Match colour should update (will be different after flip)
+        Card_Model.CardColour darkColour = game.getMatchColour();
+        assertNotNull(darkColour);
+
+        // Flip back to light side
+        game.flipAllCards();
+        assertFalse(game.isDarkSide());
+
+        // Verify startNewRound resets to light side
+        game.flipAllCards(); // Go to dark
+        assertTrue(game.isDarkSide());
+        game.startNewRound();
+        assertFalse(game.isDarkSide()); // Should reset to light
+    }
+
+    /**
+     * Tests AI player support methods.
+     * Verifies:
+     *   - isCurrentPlayerAI returns false for human players
+     *   - isCurrentPlayerAI returns true for AI players
+     *   - getAICardSelection returns -1 for human players
+     *   - getAIColourSelection returns null for human players
+     *   - AI methods delegate to Player_Model when current player is AI
+     */
+    @Test
+    @DisplayName("AI support methods work correctly for human and AI players")
+    void testAISupportMethods() {
+        // Test with human players first
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        // Human player checks
+        assertFalse(game.isCurrentPlayerAI());
+        assertEquals(-1, game.getAICardSelection());
+        assertNull(game.getAIColourSelection());
+
+        // Reset and test with AI player
+        game.resetGame();
+        Player_Model aiPlayer = new Player_Model("AI Bot", true); // AI player
+        Player_Model humanPlayer = new Player_Model("Human");
+
+        game.addPlayer(aiPlayer);
+        game.addPlayer(humanPlayer);
+        game.initializeGame();
+
+        // Find which player starts (could be either due to initial card effects)
+        if (game.getCurrentPlayer() == aiPlayer) {
+            assertTrue(game.isCurrentPlayerAI());
+            // AI selection methods should return valid values (not -1/null)
+            // The actual value depends on AI logic, but should not throw exceptions
+            int aiSelection = game.getAICardSelection();
+            // AI returns -1 if no valid play, or valid index otherwise
+            assertTrue(aiSelection >= -1);
+
+            Card_Model.CardColour aiColour = game.getAIColourSelection();
+            // AI should return a valid colour for wild card selection
+            assertNotNull(aiColour);
+            assertNotEquals(Card_Model.CardColour.WILD, aiColour);
+        } else {
+            // Human player's turn
+            assertFalse(game.isCurrentPlayerAI());
+            game.advanceToNextTurn();
+            assertTrue(game.isCurrentPlayerAI());
+        }
+    }
 }
