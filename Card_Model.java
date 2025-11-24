@@ -68,6 +68,9 @@ public class Card_Model {
         public int getCardScore(boolean isDarkSide){ return isDarkSide ? lightSideScore : darkSideScore; }
     }
 
+    /**
+     * Enum for the different sides of the UNO Cards
+     */
     public enum CardSide{ LIGHT_SIDE, DARK_SIDE}
 
     private final CardValue LIGHT_SIDE_VALUE;

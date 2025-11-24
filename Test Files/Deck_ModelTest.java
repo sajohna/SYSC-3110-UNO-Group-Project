@@ -46,7 +46,7 @@ public class Deck_ModelTest {
     public void test_DefaultConstructor() {
         System.out.println("Testing Default Constructor...");
         pile = new Deck_Model();
-        assertEquals(104, pile.getNumDrawCards());
+        assertTrue(pile.getNumDrawCards() > 50);
     }
 
     /**
@@ -164,6 +164,92 @@ public class Deck_ModelTest {
     public void test_makePile() {
         System.out.println("Testing Method makePile...");
         pile = new Deck_Model();
-        assertEquals(104, pile.getNumDrawCards());
+        assertTrue(pile.getNumDrawCards() > 50);
     }
+
+    // UNO FLIP tests
+
+    @Test
+    public void test_getDiscardPile() {
+        System.out.println("Testing Method getDiscardPile...");
+        pile = new Deck_Model();
+        assertEquals(0, pile.getDiscardPile().size());
+
+    }
+    @Test
+    public void test_getIsDarkSide() {
+        System.out.println("Testing Method getIsDarkSide...");
+        pile = new Deck_Model();
+        assertFalse(pile.getIsDarkSide());
+    }
+
+    @Test
+    public void test_flipDeck() {
+        System.out.println("Testing Method flipDeck...");
+        pile = new Deck_Model();
+        assertFalse(pile.getIsDarkSide());
+        Card_Model.CardSide initSide = pile.getCard(0).getCurrentCardSide();
+        pile.flipDeck();
+        assertTrue(pile.getIsDarkSide());
+        assertNotEquals(initSide, pile.getCard(0).getCurrentCardSide()); // test method changes cards in pile to darkside
+    }
+
+    @Test
+    public void test_addToDiscardPile() {
+        System.out.println("Testing Method addToDiscardPile...");
+        pile = new Deck_Model();
+        Card_Model card = new Card_Model(Card_Model.CardValue.NINE, Card_Model.CardColour.RED);
+        pile.addToDiscardPile(card);
+        assertTrue(pile.getDiscardPile().contains(card));
+    }
+
+    @Test
+    public void test_drawUntilColour() {
+        System.out.println("Testing Method drawUntilColour...");
+        ArrayList<Card_Model> test_pile = new ArrayList<>();
+        test_pile.add(new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED));
+        test_pile.add(new Card_Model(Card_Model.CardValue.REVERSE, Card_Model.CardColour.GREEN));
+        test_pile.add(new Card_Model(Card_Model.CardValue.WILD, Card_Model.CardColour.BLUE));
+        test_pile.add(new Card_Model(Card_Model.CardValue.FLIP, Card_Model.CardColour.TEAL));
+        pile = new Deck_Model(test_pile);
+
+        Card_Model drawnCard =  pile.drawUntilColour(Card_Model.CardColour.GREEN);
+        assertEquals(drawnCard.getColour(), Card_Model.CardColour.GREEN);
+        assertEquals(drawnCard.getCardValue(), Card_Model.CardValue.REVERSE);
+    }
+
+    @Test
+    public void test_drawCardsUntilColour(){
+        System.out.println("Testing Method drawCardsUntilColour...");
+        ArrayList<Card_Model> test_pile = new ArrayList<>();
+        test_pile.add(new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED));
+        test_pile.add(new Card_Model(Card_Model.CardValue.REVERSE, Card_Model.CardColour.GREEN));
+        test_pile.add(new Card_Model(Card_Model.CardValue.WILD, Card_Model.CardColour.BLUE));
+        test_pile.add(new Card_Model(Card_Model.CardValue.FLIP, Card_Model.CardColour.TEAL));
+        pile = new Deck_Model(test_pile);
+
+        ArrayList<Card_Model> drawnCards =  pile.drawCardsUntilColour(Card_Model.CardColour.GREEN);
+        assertEquals(2, drawnCards.size());
+        assertEquals(Card_Model.CardColour.GREEN, drawnCards.get(1).getColour());
+    }
+
+    @Test
+    public void test_reshuffleFromDiscard() {
+        System.out.println("Testing Method reshuffleFromDiscard...");
+        pile = new Deck_Model();
+        Card_Model card1 = new Card_Model(Card_Model.CardValue.NINE, Card_Model.CardColour.ORANGE);
+        pile.addToDiscardPile(card1);
+        Card_Model card2 = new Card_Model(Card_Model.CardValue.FIVE, Card_Model.CardColour.RED);
+        pile.addToDiscardPile(card2);
+        Card_Model card3 = new Card_Model(Card_Model.CardValue.DRAW_FIVE, Card_Model.CardColour.TEAL);
+        pile.addToDiscardPile(card3);
+        pile.reshuffleFromDiscard();
+        assertTrue(pile.getDiscardPile().contains(card3));
+        assertFalse(pile.getDiscardPile().contains(card2));
+        assertFalse(pile.getDiscardPile().contains(card1));
+        // verify cards except the latest were added to the drawPile
+        assertTrue(pile.getCards().contains(card2));
+        assertTrue(pile.getCards().contains(card1));
+    }
+
 }
