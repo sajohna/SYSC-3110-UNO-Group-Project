@@ -2,11 +2,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.ArrayList;
 public class Player_ModelTest
 {
     private static Player_Model player;
+    private Player_Model aiPlayer;
     private static int count;
 
     /**
@@ -15,7 +18,7 @@ public class Player_ModelTest
      * and card functionality
      *
      * @author Lucas Baker
-     * @version 1.0 - Milestone 1
+     * @version 3.0 - Milestone 3
      */
     public Player_ModelTest() {}
 
@@ -179,10 +182,10 @@ public class Player_ModelTest
         player = new Player_Model();
         player.drawCard(deck);
         assertEquals(1, player.getNumCards());
-        assertEquals(103, deck.getNumDrawCards());
+        assertEquals(111, deck.getNumDrawCards());
         player.drawCard(deck);
         assertEquals(2, player.getNumCards());
-        assertEquals(102, deck.getNumDrawCards());
+        assertEquals(110, deck.getNumDrawCards());
         count = 4;
     }
 
@@ -225,5 +228,128 @@ public class Player_ModelTest
         assertEquals(Card_Model.CardValue.REVERSE, played.getCardValue());
         assertEquals(Card_Model.CardColour.BLUE, played.getColour());
         count = 2;
+    }
+
+    @Test
+    public void test_HumanNotAI() {
+        System.out.println("Testing the isAI() method");
+        player = new Player_Model("Human", false);
+        assertFalse(player.isAI());
+        count = 1;
+    }
+
+    @Test
+    public void test_AIStrategy() {
+        System.out.println("Testing the getAIStrategy() method");
+        aiPlayer = new Player_Model("AI", true, Player_Model.AIStrategy.HIGHEST_SCORE);
+        assertEquals(Player_Model.AIStrategy.HIGHEST_SCORE, aiPlayer.getAIStrategy());
+        aiPlayer.setAIStrategy(Player_Model.AIStrategy.FIRST_VALID);
+        assertEquals(Player_Model.AIStrategy.FIRST_VALID, aiPlayer.getAIStrategy());
+        count = 2;
+    }
+
+    @Test
+    public void test_SetAI() {
+        System.out.println("Testing the setAI() method");
+        player = new Player_Model("Test");
+        assertFalse(player.isAI());
+        player.setAI(true);
+        assertTrue(player.isAI());
+        count = 2;
+    }
+
+    @Test
+    public void test_FlipAllCards() {
+        System.out.println("Testing the flipAllCards() method");
+        player = new Player_Model("Test");
+        Card_Model card = new Card_Model(Card_Model.CardValue.ONE, Card_Model.CardColour.RED,
+                Card_Model.CardValue.TWO, Card_Model.CardColour.TEAL);
+        player.addCard(card);
+
+        assertEquals(Card_Model.CardSide.LIGHT_SIDE, card.getCurrentCardSide());
+        player.flipAllCards();
+        assertEquals(Card_Model.CardSide.DARK_SIDE, card.getCurrentCardSide());
+        count = 2;
+    }
+
+    @Test
+    public void test_GetValidCardIndices() {
+        System.out.println("Testing the getValidCardIndices() method");
+        player = new Player_Model("Test");
+        player.addCard(new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED));
+        player.addCard(new Card_Model(Card_Model.CardValue.FIVE, Card_Model.CardColour.BLUE));
+        player.addCard(new Card_Model(Card_Model.CardValue.WILD, Card_Model.CardColour.WILD));
+
+        Card_Model activeCard = new Card_Model(Card_Model.CardValue.TWO, Card_Model.CardColour.RED);
+        List<Integer> valid = player.getValidCardIndices(activeCard, Card_Model.CardColour.RED,
+                Card_Model.CardValue.TWO);
+
+        assertTrue(valid.contains(0)); // RED matches
+        assertFalse(valid.contains(1)); // BLUE doesn't match
+        assertTrue(valid.contains(2)); // WILD always valid
+        count = 3;
+    }
+
+    @Test
+    public void test_SelectCardToPlay() {
+        System.out.println("Testing the selectCardToPlay() method");
+        aiPlayer = new Player_Model("AI", true, Player_Model.AIStrategy.FIRST_VALID);
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED));
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.FIVE, Card_Model.CardColour.BLUE));
+
+        int selected = aiPlayer.selectCardToPlay(
+                new Card_Model(Card_Model.CardValue.TWO, Card_Model.CardColour.RED),
+                Card_Model.CardColour.RED, Card_Model.CardValue.TWO, false);
+
+        assertEquals(0, selected);
+        count = 1;
+    }
+
+    @Test
+    public void test_SelectHighestScoreCard() {
+        System.out.println("Testing the selectHighestScoreCard() method");
+        aiPlayer = new Player_Model("AI", true, Player_Model.AIStrategy.HIGHEST_SCORE);
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.ONE, Card_Model.CardColour.RED)); // Score 1
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.NINE, Card_Model.CardColour.RED)); // Score 9
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.SKIP, Card_Model.CardColour.RED)); // Score 20
+
+        int selected = aiPlayer.selectCardToPlay(
+                new Card_Model(Card_Model.CardValue.TWO, Card_Model.CardColour.RED),
+                Card_Model.CardColour.RED, Card_Model.CardValue.TWO, false);
+
+        assertEquals(2, selected);
+        count = 1;
+    }
+
+    @Test
+    public void test_SelectStrategicCard() {
+        System.out.println("Testing the selectStrategicCard() method");
+        aiPlayer = new Player_Model("AI", true, Player_Model.AIStrategy.STRATEGIC);
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.ONE, Card_Model.CardColour.RED));
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.WILD, Card_Model.CardColour.WILD));
+
+        int selected = aiPlayer.selectCardToPlay(
+                new Card_Model(Card_Model.CardValue.TWO, Card_Model.CardColour.RED),
+                Card_Model.CardColour.RED, Card_Model.CardValue.TWO, false);
+
+        assertEquals(0, selected); //Should play red card to save wild for later
+        count = 1;
+    }
+
+    @Test
+    public void test_SelectWildColour() {
+        System.out.println("Testing the selectWildColour() method");
+        aiPlayer = new Player_Model("AI", true);
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.THREE, Card_Model.CardColour.RED));
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.FIVE, Card_Model.CardColour.RED));
+        aiPlayer.addCard(new Card_Model(Card_Model.CardValue.ONE, Card_Model.CardColour.BLUE));
+
+        Card_Model.CardColour selected = aiPlayer.selectWildColour();
+
+        assertNotNull(selected);
+        assertNotEquals(Card_Model.CardColour.WILD, selected);
+        // Should select RED as most common
+        assertEquals(Card_Model.CardColour.RED, selected);
+        count = 3;
     }
 }
