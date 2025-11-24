@@ -321,11 +321,19 @@ public class Uno_Model {
      * Processes any special effect of the initial card drawn at game start.
      * Handles REVERSE, SKIP, DRAW_ONE, WILD, FLIP, SKIP_EVERYONE, and DRAW_FIVE effects.
      * Different from mid-game effects: Wild requires random colour, no player played it.
+     * In 2-player games, REVERSE means current player plays again (no turn change).
      */
     private void processInitialCardEffect() {
         SpecialCardEffect effect = identifySpecialCard();
         switch (effect) {
-            case REVERSE -> { if (participants.size() == 2) advanceToNextTurn(); else playDirection *= -1; }
+            case REVERSE -> {
+                if (participants.size() == 2) {
+                    // Current player plays again in 2-player game - no turn advancement
+                } else {
+                    // Reverse direction in 3-4 player games
+                    playDirection *= -1;
+                }
+            }
             case SKIP -> advanceToNextTurn();
             case DRAW_ONE -> { forceCurrentPlayerDraw(1); advanceToNextTurn(); }
             case WILD -> matchColour = getRandomColour();
@@ -365,11 +373,17 @@ public class Uno_Model {
 
     /**
      * Reverses the play direction (clockwise to counter-clockwise or vice versa).
-     * In a 2-player game, this acts like a skip and advances to the next turn.
+     * In a 2-player game, current player plays again (no turn advancement).
+     * In 3-4 player games, reverses direction and advances to next player.
      */
     public void reversePlayDirection() {
-        playDirection *= -1;
-        if (participants.size() == 2) advanceToNextTurn();
+        if (participants.size() == 2) {
+            // In 2-player game, current player plays again - don't advance turn
+            // This is functionally like SKIP_EVERYONE
+        } else {
+            // In 3-4 player games, reverse the direction
+            playDirection *= -1;
+        }
     }
 
     // ======== CARD LOGIC ========
@@ -443,6 +457,7 @@ public class Uno_Model {
      * Processes the effect of a special card after it has been played.
      * Handles both light side effects (REVERSE, SKIP, DRAW_ONE) and
      * dark side effects (FLIP, SKIP_EVERYONE, DRAW_FIVE).
+     * In 2-player games, REVERSE means current player plays again (no turn change).
      * @param effect the SpecialCardEffect to process
      */
     private void processSpecialCardEffect(SpecialCardEffect effect) {

@@ -43,6 +43,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     private JTextField[] playerNameFields;
     private int selectedPlayerCount = 2;
     private Timer aiTimer;
+    private JTextArea actionLogArea;
 
     /**
      * Constructs the UNO view, initializes components, listeners, and displays the setup panel.
@@ -100,7 +101,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         JPanel topCardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
         topCardPanel.setBackground(new Color(34, 139, 34));
         topCardPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(Color.WHITE, 2), "Top Card", 0, 0, null, Color.WHITE));
+                BorderFactory.createLineBorder(Color.WHITE, 2), "Top Card", 0, 0, null, Color.WHITE));
 
         topCardDisplay = new JButton("<html><center>No Card</center></html>");
         topCardDisplay.setPreferredSize(new Dimension(120, 160));
@@ -157,12 +158,23 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         rightPanel.setBackground(new Color(46, 125, 50));
         rightPanel.setPreferredSize(new Dimension(280, 0));
 
-        gameStateArea = new JTextArea(15, 20);
+        gameStateArea = new JTextArea(10, 20);
         gameStateArea.setEditable(false);
         gameStateArea.setBackground(new Color(240, 248, 255));
         JScrollPane stateScroll = new JScrollPane(gameStateArea);
         stateScroll.setBorder(BorderFactory.createTitledBorder("Scores"));
         rightPanel.add(stateScroll);
+
+        // Add action log area
+        actionLogArea = new JTextArea(8, 20);
+        actionLogArea.setEditable(false);
+        actionLogArea.setBackground(new Color(255, 255, 240));
+        actionLogArea.setLineWrap(true);
+        actionLogArea.setWrapStyleWord(true);
+        JScrollPane logScroll = new JScrollPane(actionLogArea);
+        logScroll.setBorder(BorderFactory.createTitledBorder("Action Log"));
+        rightPanel.add(Box.createVerticalStrut(10));
+        rightPanel.add(logScroll);
 
         colorSelectionPanel = new JPanel(new GridLayout(2, 4, 5, 5));
         colorSelectionPanel.setBorder(BorderFactory.createTitledBorder("Choose Color"));
@@ -272,12 +284,20 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     }
 
     /**
+     * Logs an action to the action log area.
+     */
+    private void logAction(String action) {
+        actionLogArea.append(action + "\n");
+        actionLogArea.setCaretPosition(actionLogArea.getDocument().getLength());
+    }
+
+    /**
      * Handles start game action.
      */
     private void handleStartGame() {
         List<Boolean> isAIList = new ArrayList<>();
         List<String> names = new ArrayList<>();
-        
+
         for (int i = 0; i < 4; i++) {
             String type = (String) playerTypeBoxes[i].getSelectedItem();
             if (!type.equals("None")) {
@@ -296,21 +316,31 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         controller.initializeGame();
         showGamePanel();
         updateFullView();
-        showMessage("Game started! " + controller.getCurrentPlayer().getName() + "'s turn.");
-        checkAndProcessAI();
+
+        Player_Model currentPlayer = controller.getCurrentPlayer();
+        if (currentPlayer != null) {
+            logAction("Game started! " + currentPlayer.getName() + "'s turn.");
+        }
+
+        // Use invokeLater to ensure UI is fully updated before AI starts
+        SwingUtilities.invokeLater(() -> checkAndProcessAI());
     }
 
     /**
      * Handles draw card action.
      */
     private void handleDrawCard() {
+        if (controller.isPlayerAI()) {
+            showError("AI is playing! Please wait.");
+            return;
+        }
         if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
             showError("Please select a color first!");
             return;
         }
         String playerName = controller.getCurrentPlayer().getName();
         controller.handleDrawCard();
-        showMessage(playerName + " drew a card.");
+        logAction(playerName + " drew a card.");
         nextTurnButton.setEnabled(true);
     }
 
@@ -318,13 +348,17 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles next turn action.
      */
     private void handleNextTurn() {
+        if (controller.isPlayerAI()) {
+            showError("AI is playing! Please wait.");
+            return;
+        }
         if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
             showError("Please select a color first!");
             return;
         }
         controller.handleNextPlayer();
         nextTurnButton.setEnabled(false);
-        showMessage("Now it's " + controller.getCurrentPlayer().getName() + "'s turn!");
+        logAction("Now it's " + controller.getCurrentPlayer().getName() + "'s turn!");
         checkAndProcessAI();
     }
 
@@ -336,8 +370,11 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         newRoundButton.setVisible(false);
         newGameButton.setVisible(false);
         nextTurnButton.setEnabled(false);
-        showMessage("New round started!");
-        checkAndProcessAI();
+        actionLogArea.setText("");
+        logAction("New round started!");
+
+        // Use invokeLater to ensure UI is fully updated before AI starts
+        SwingUtilities.invokeLater(() -> checkAndProcessAI());
     }
 
     /**
@@ -346,6 +383,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     private void handleNewGame() {
         if (aiTimer != null) aiTimer.stop();
         controller.resetGame();
+        actionLogArea.setText("");
         showSetupPanel();
     }
 
@@ -353,17 +391,22 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles card play action.
      */
     private void handleCardPlay(int cardIndex) {
+        if (controller.isPlayerAI()) {
+            showError("AI is playing! Please wait.");
+            return;
+        }
         if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
             showError("Please select a color first!");
             return;
         }
         String playerName = controller.getCurrentPlayer().getName();
+        Card_Model cardPlayed = controller.getCurrentPlayer().getHand().get(cardIndex);
         boolean success = controller.playCard(cardIndex);
         if (success) {
             if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
-                showMessage(playerName + " played a WILD card! Choose a color.");
+                logAction(playerName + " played " + cardPlayed + ". Choose a color!");
             } else {
-                showMessage(playerName + " played a card!");
+                logAction(playerName + " played " + cardPlayed + ".");
                 nextTurnButton.setEnabled(true);
             }
         } else {
@@ -375,9 +418,13 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles color selection for wild cards.
      */
     private void handleColorSelection(Card_Model.CardColour color) {
+        if (controller.isPlayerAI()) {
+            showError("AI is playing! Please wait.");
+            return;
+        }
         boolean success = controller.setWildCardColour(color);
         if (success) {
-            showMessage("Color set to " + color + ".");
+            logAction(controller.getCurrentPlayer().getName() + " chose color: " + color + ".");
             nextTurnButton.setEnabled(true);
             checkAndProcessAI();
         } else {
@@ -387,22 +434,76 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
 
     /**
      * Checks if the current player is an AI player and processes the AI turn
-     * with appropriate delays.
+     * with appropriate delays and logging.
      */
     private void checkAndProcessAI() {
-        if (controller.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) return;
+        if (controller.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            setControlsEnabled(true);
+            return;
+        }
+
         if (controller.isPlayerAI()) {
             setControlsEnabled(false);
             if (aiTimer != null) aiTimer.stop();
-            aiTimer = new Timer(800, e -> {
-                aiTimer.stop();
-                String aiName = controller.getCurrentPlayer().getName();
-                controller.processAITurn();
-                updateFullView();
-                if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
-                    checkAndProcessAI();
-                } else {
+
+            aiTimer = new Timer(1000, e -> {
+                try {
+                    Player_Model currentPlayer = controller.getCurrentPlayer();
+                    if (currentPlayer == null || !currentPlayer.isAI()) {
+                        setControlsEnabled(true);
+                        return;
+                    }
+
+                    String aiName = currentPlayer.getName();
+
+                    // Log what the AI is about to do
+                    if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
+                        logAction(aiName + " (AI) is choosing a color...");
+                        boolean processed = controller.processAITurn();
+                        if (processed) {
+                            logAction(aiName + " (AI) chose color: " + controller.getMatchColour() + ".");
+                        }
+                    } else {
+                        int numCardsBefore = currentPlayer.getNumCards();
+                        Card_Model activeCardBefore = controller.getActiveCard();
+
+                        logAction(aiName + " (AI) is taking their turn...");
+                        boolean processed = controller.processAITurn();
+
+                        if (processed) {
+                            // Check what happened after the turn
+                            Player_Model afterPlayer = controller.getCurrentPlayer();
+                            int numCardsAfter = currentPlayer.getNumCards();
+                            Card_Model activeCardAfter = controller.getActiveCard();
+
+                            // Determine what action was taken
+                            if (numCardsAfter > numCardsBefore) {
+                                logAction(aiName + " (AI) drew a card and passed.");
+                            } else if (activeCardAfter != activeCardBefore && numCardsAfter < numCardsBefore) {
+                                logAction(aiName + " (AI) played " + activeCardAfter + ".");
+                            }
+                        }
+                    }
+
+                    updateFullView();
+
+                    // Continue processing if still AI's turn
+                    if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS &&
+                            controller.isPlayerAI()) {
+                        checkAndProcessAI();
+                    } else {
+                        setControlsEnabled(true);
+                        if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
+                            Player_Model nextPlayer = controller.getCurrentPlayer();
+                            if (nextPlayer != null && !nextPlayer.isAI()) {
+                                logAction("It's now " + nextPlayer.getName() + "'s turn!");
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                     setControlsEnabled(true);
+                    showError("Error during AI turn: " + ex.getMessage());
                 }
             });
             aiTimer.setRepeats(false);
@@ -414,12 +515,19 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
 
     /**
      * Enables or disables all interactive controls (used during AI turns).
-     * @param enabled
-     * true to enable controls; false to disable
      */
     private void setControlsEnabled(boolean enabled) {
         drawCardButton.setEnabled(enabled);
+        nextTurnButton.setEnabled(enabled && nextTurnButton.isEnabled());
         for (JButton btn : cardButtons) btn.setEnabled(enabled);
+        redButton.setEnabled(enabled);
+        blueButton.setEnabled(enabled);
+        greenButton.setEnabled(enabled);
+        yellowButton.setEnabled(enabled);
+        tealButton.setEnabled(enabled);
+        purpleButton.setEnabled(enabled);
+        pinkButton.setEnabled(enabled);
+        orangeButton.setEnabled(enabled);
     }
 
     /**
@@ -463,7 +571,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         sideLabel.setText("Side: " + (dark ? "DARK" : "LIGHT"));
         sideLabel.setForeground(dark ? Color.MAGENTA : Color.WHITE);
         mainPanel.setBackground(dark ? new Color(30, 30, 60) : new Color(34, 139, 34));
-        
+
         if (controller.getActiveCard() != null) {
             activeCardLabel.setText("Active: " + controller.getActiveCard().toString());
             updateTopCardDisplay(controller.getActiveCard());
@@ -475,20 +583,37 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         if (currentPlayer != null) {
             String aiTag = currentPlayer.isAI() ? " (AI)" : "";
             currentPlayerLabel.setText("Current: " + currentPlayer.getName() + aiTag);
-            updatePlayerHand(currentPlayer.getHand());
+            currentPlayerLabel.setForeground(currentPlayer.isAI() ? Color.CYAN : Color.YELLOW);
+
+            // Only show current player's hand if they're human
+            if (!currentPlayer.isAI()) {
+                updatePlayerHand(currentPlayer.getHand());
+            } else {
+                // Show placeholder for AI hand
+                playerHandPanel.removeAll();
+                cardButtons.clear();
+                JLabel aiHandLabel = new JLabel("AI Player - " + currentPlayer.getNumCards() + " cards (Playing...)");
+                aiHandLabel.setForeground(Color.CYAN);
+                aiHandLabel.setFont(new Font("Arial", Font.BOLD, 16));
+                playerHandPanel.add(aiHandLabel);
+                playerHandPanel.revalidate();
+                playerHandPanel.repaint();
+            }
         }
 
         updateScores();
         updateColorButtons(dark);
-        colorSelectionPanel.setVisible(controller.isPendingColourSelection() || 
-                                       controller.isPendingDrawColourSelection());
+
+        // Only show color selection if human player needs to choose
+        boolean showColorPanel = (controller.isPendingColourSelection() ||
+                controller.isPendingDrawColourSelection()) &&
+                !controller.isPlayerAI();
+        colorSelectionPanel.setVisible(showColorPanel);
     }
 
     /**
      * Updates which color buttons are visible depending on whether the current
      * side is light or dark.
-     * @param dark
-     * true if on the dark side; false otherwise
      */
     private void updateColorButtons(boolean dark) {
         redButton.setVisible(!dark);
@@ -510,8 +635,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             topCardDisplay.setBackground(new Color(100, 100, 100));
             return;
         }
-        topCardDisplay.setText("<html><center><b>" + card.getColour() + "</b><br><br>" + 
-                               card.getCardValue() + "</center></html>");
+        topCardDisplay.setText("<html><center><b>" + card.getColour() + "</b><br><br>" +
+                card.getCardValue() + "</center></html>");
         topCardDisplay.setBackground(getColorForCard(card.getColour()));
     }
 
@@ -537,8 +662,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Creates a button representing a card.
      */
     private JButton createCardButton(Card_Model card, int index) {
-        JButton button = new JButton("<html><center>" + card.getColour() + "<br>" + 
-                                     card.getCardValue() + "</center></html>");
+        JButton button = new JButton("<html><center>" + card.getColour() + "<br>" +
+                card.getCardValue() + "</center></html>");
         button.setPreferredSize(new Dimension(100, 140));
         button.setBackground(getColorForCard(card.getColour()));
         button.setForeground(Color.WHITE);
@@ -573,7 +698,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         sb.append("=== SCORES ===\n\n");
         for (Player_Model player : controller.getParticipants()) {
             sb.append(player.getName()).append(player.isAI() ? " (AI)" : "")
-              .append(": ").append(player.getScore()).append(" pts\n");
+                    .append(": ").append(player.getScore()).append(" pts\n");
         }
         sb.append("\n=== CARDS IN HAND ===\n\n");
         for (Player_Model player : controller.getParticipants()) {
@@ -583,26 +708,28 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     }
 
     /**
-     * Displays a message dialog.
-     */
-    private void showMessage(String msg) { JOptionPane.showMessageDialog(this, msg); }
-    /**
      * Displays an error message.
      */
-    private void showError(String msg) { JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE); }
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
 
     /**
      * Handles game state update events from the controller.
      */
     @Override
-    public void handleGameUpdate(Uno_Event event) { updateFullView(); }
+    public void handleGameUpdate(Uno_Event event) {
+        updateFullView();
+        // Trigger AI processing after view update
+        SwingUtilities.invokeLater(() -> checkAndProcessAI());
+    }
 
     /**
      * Handles round end events.
      */
     @Override
     public void handleRoundEnd(Uno_Event event) {
-        showMessage("Round ended! Check scores.");
+        logAction("Round ended! Check scores.");
         newRoundButton.setVisible(true);
         newGameButton.setVisible(true);
     }
@@ -612,9 +739,11 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      */
     @Override
     public void handleGameOver(Uno_Event event) {
-        Player_Model winner = event.getPlayer();
+        Player_Model winner = controller.getWinner();
         if (winner != null) {
-            showMessage("GAME OVER! " + winner.getName() + " wins with " + winner.getScore() + " points!");
+            logAction("GAME OVER! " + winner.getName() + " wins with " + winner.getScore() + " points!");
+            JOptionPane.showMessageDialog(this,
+                    "GAME OVER! " + winner.getName() + " wins with " + winner.getScore() + " points!");
         }
         newRoundButton.setVisible(false);
         newGameButton.setVisible(true);
