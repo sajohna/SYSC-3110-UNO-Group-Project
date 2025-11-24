@@ -181,16 +181,6 @@ public class Player_Model {
     }
 
     /**
-     * Removes card from the player's hand by its index, decreases card count.
-     * @param card
-     * The card in the list to remove from the player's hand.
-     */
-    public void removeCard(Card_Model card) {
-        hand.remove(card);
-        numCards--;
-    }
-
-    /**
      * Plays card from the player's hand.
      * @param index
      * The index of the card to play in the player's hand.
@@ -343,7 +333,7 @@ public class Player_Model {
         }
         
         // Save wild cards unless necessary
-        if (card.isWildCard() && numCards > 2) priority -= 15;
+        if (card.isWildCard() && numCards > 1) priority -= 40;
         
         // Prefer flip cards in strategic situations
         if (val == Card_Model.CardValue.FLIP && numCards > 4) priority += 15;
