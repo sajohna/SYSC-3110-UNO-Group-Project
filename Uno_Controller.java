@@ -120,6 +120,32 @@ public class Uno_Controller implements ActionListener {
     }
 
     /**
+     * Create players for the UNO game and add them to the UNO model
+     *
+     * @param numPlayers: int the number of players to be created
+     * @param numAIPlayers: 
+     */
+    public void createPlayers(int numPlayers, int numAIPlayers){
+        for (int i = 0; i <numPlayers; i++) {
+            Player_Model player = new Player_Model("Player" + i);
+            uno.addPlayer(player);
+        }
+        for (int i = 0; i <numAIPlayers; i++) {
+            Player_Model ai = new Player_Model("AI" + i, true, Player_Model.AIStrategy.STRATEGIC);
+            uno.addPlayer(ai);
+        }
+    }
+
+    public void createPlayersWithConfig(List<Boolean> isAIList, List<String> names){
+        for (int i = 0; i < isAIList.size(); i++){
+            String name = (names != null && !names.isEmpty()) ? names.get(i) : "Player" + i;
+            boolean isAI = isAIList.get(i);
+            Player_Model player = new Player_Model(name, isAI, isAI ? Player_Model.AIStrategy.STRATEGIC : Player_Model.AIStrategy.FIRST_VALID);
+            uno.addPlayer(player);
+        }
+    }
+
+    /**
      * Handle the draw a card action by the current player
      */
 
@@ -127,7 +153,7 @@ public class Uno_Controller implements ActionListener {
         if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
             return;
         }
-        if (isPendingColourSelection()){
+        if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return;
         }
         uno.drawCard();
@@ -142,7 +168,7 @@ public class Uno_Controller implements ActionListener {
         if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
             return;
         }
-        if (isPendingColourSelection()){
+        if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return;
         }
         uno.advanceToNextTurn();
@@ -159,7 +185,7 @@ public class Uno_Controller implements ActionListener {
         if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
             return false;
         }
-        if (isPendingColourSelection()){
+        if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return false;
         }
 
@@ -183,7 +209,7 @@ public class Uno_Controller implements ActionListener {
      * @return boolean indicating if the colour selection was successful
      */
     public boolean setWildCardColour(Card_Model.CardColour colour){
-        if (!isPendingColourSelection()){
+        if (!isPendingColourSelection() && !isPendingDrawColourSelection()){
             return false;
         }
         boolean result = uno.setActiveColour(colour);
@@ -197,6 +223,48 @@ public class Uno_Controller implements ActionListener {
             return true;
         }
         return false;
+    }
+    /// Methods for AI
+    public boolean isPlayerAI(){
+        return uno.isCurrentPlayerAI();
+    }
+
+    public boolean processAITurn(){
+        if(!isPlayerAI()) return false;
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            return false;
+        }
+
+        if (isPendingColourSelection() || isPendingDrawColourSelection()){
+            Card_Model.CardColour chosenColour = uno.getAIColourSelection();
+            if (chosenColour != null)  return setWildCardColour(chosenColour);
+            return false;
+        }
+
+        int cardIndex = uno.getAICardSelection();
+        if (cardIndex >= 0) {
+            boolean played = playCard(cardIndex);
+            if (played && (isPendingColourSelection() || isPendingDrawColourSelection())) {
+                Card_Model.CardColour colour = uno.getAIColourSelection();
+                if (colour != null) {
+                    setWildCardColour(colour);
+                }
+            }
+            return played;
+        } else {
+            handleDrawCard();
+            handleNextPlayer();
+            return true;
+        }
+
+    }
+
+    public void processAITurnsUntilHuman() {
+        while (isPlayerAI() && 
+               uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
+            try { Thread.sleep(500); } catch (InterruptedException e) {}
+            processAITurn();
+        }
     }
 
     /* Getters for different game attributes */
@@ -276,6 +344,14 @@ public class Uno_Controller implements ActionListener {
     }
 
     /**
+     * Check if the game is pending a colour selection after a wild card play
+     * @return boolean indicating if the game is pending a colour selection
+     */
+    public boolean isPendingDrawColourSelection() {
+        return uno.isPendingDrawColourSelection();
+    }
+
+    /**
      * Check if the current round is over
      * @return boolean indicating if the round is over
      */
@@ -290,6 +366,10 @@ public class Uno_Controller implements ActionListener {
      */
     public boolean isGameOver(){
         return uno.isGameOver();
+    }
+
+    public boolean isDarkSide(){
+        return uno.isDarkSide();
     }
 
 }

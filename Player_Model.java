@@ -205,7 +205,7 @@ public class Player_Model {
      */
     public void flipAllCards() {
         for (Card_Model card : hand) {
-            card.flip();
+            card.flipCardSide();
         }
     }
 
@@ -242,7 +242,7 @@ public class Player_Model {
      */
     private boolean isValidPlay(Card_Model card, Card_Model.CardColour matchColour, Card_Model.CardValue matchType) {
         if (card == null) return false;
-        if (card.isWild()) return true;
+        if (card.isWildCard()) return true;
         return card.getColour() == matchColour || card.getCardValue() == matchType;
     }
 
@@ -289,7 +289,7 @@ public class Player_Model {
         int bestIdx = validIndices.get(0);
         int bestScore = 0;
         for (int idx : validIndices) {
-            int cardScore = hand.get(idx).getScore(isDarkSide);
+            int cardScore = hand.get(idx).getCardScore(isDarkSide);
             if (cardScore > bestScore) {
                 bestScore = cardScore;
                 bestIdx = idx;
@@ -330,7 +330,7 @@ public class Player_Model {
      * @return calculated priority value
      */
     private int getCardPriority(Card_Model card, boolean isDarkSide) {
-        int priority = card.getScore(isDarkSide);
+        int priority = card.getCardScore(isDarkSide);
         Card_Model.CardValue val = card.getCardValue();
         
         // Prioritize action cards when hand is small
@@ -343,7 +343,7 @@ public class Player_Model {
         }
         
         // Save wild cards unless necessary
-        if (card.isWild() && numCards > 2) priority -= 15;
+        if (card.isWildCard() && numCards > 2) priority -= 15;
         
         // Prefer flip cards in strategic situations
         if (val == Card_Model.CardValue.FLIP && numCards > 4) priority += 15;
@@ -360,10 +360,10 @@ public class Player_Model {
         
         int[] colourCounts = new int[4];
         Card_Model.CardColour[] colours;
-        Card_Model.CardSide side = hand.isEmpty() ? Card_Model.CardSide.LIGHT 
-            : hand.get(0).getCurrentSide();
+        Card_Model.CardSide side = hand.isEmpty() ? Card_Model.CardSide.LIGHT_SIDE
+            : hand.get(0).getCurrentCardSide();
         
-        if (side == Card_Model.CardSide.LIGHT) {
+        if (side == Card_Model.CardSide.LIGHT_SIDE) {
             colours = new Card_Model.CardColour[]{
                 Card_Model.CardColour.RED, Card_Model.CardColour.BLUE,
                 Card_Model.CardColour.GREEN, Card_Model.CardColour.YELLOW

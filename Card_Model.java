@@ -33,50 +33,77 @@
  * with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
  * 
  * @author Lasya Erukulla
- * @version 1.0 - Milestone 1
+ * @version 3.0 - Milestone 3
  */
 
 public class Card_Model {
     /**
      * Enum for the different colours of Uno cards
      */
-    public enum CardColour {RED, BLUE, GREEN, YELLOW, WILD}
+    public enum CardColour {
+        // Light side colors
+        RED, BLUE, GREEN, YELLOW, WILD,
+        //Dark side colors
+        TEAL, PURPLE, ORANGE, PINK
+    }
 
     /**
      * Enum for the different values of Uno cards
      */
     public enum CardValue {
-        ONE(1), TWO(2), THREE(3), FOUR(4), FIVE(5), SIX(6), SEVEN(7), EIGHT(8), NINE(9), REVERSE(20), 
-        DRAW_ONE(10), SKIP(20), WILD(40), WILD_DRAW_TWO(50);
+        ONE(1, 1), TWO(2, 2), THREE(3, 3), FOUR(4, 4), FIVE(5, 5), SIX(6, 6), SEVEN(7, 7), EIGHT(8,8), NINE(9,9),
+        //Light side special cards
+        REVERSE(20, 20), DRAW_ONE(10, 10), SKIP(20, 20), WILD(40, 40), WILD_DRAW_TWO(50, 50),
+        //Dark side speical cards
+        FLIP(20, 20), DRAW_FIVE(20,20), SKIP_EVERYONE(30, 30), WILD_DRAW_COLOUR(60,60);
 
-        int cardScore;
-        CardValue(int cardScore) {
-            this.cardScore = cardScore;
+        int lightSideScore;
+        int darkSideScore;
+
+        CardValue(int lightSideScore, int darkSideScore) {
+            this.lightSideScore = lightSideScore;
+            this.darkSideScore = darkSideScore;
         }
 
+        public int getCardScore(boolean isDarkSide){ return isDarkSide ? lightSideScore : darkSideScore; }
     }
 
-    private String pathToImageFile;
-    private final CardValue VALUE;
-    private final CardColour COLOUR;
+    public enum CardSide{ LIGHT_SIDE, DARK_SIDE}
+
+    private final CardValue LIGHT_SIDE_VALUE;
+    private final CardColour LIGHT_SIDE_COLOUR;
+    private final CardValue DARK_SIDE_VALUE;
+    private final CardColour DARK_SIDE_COLOUR;
+    private CardSide currentCardSide;
 
     /**
-     * Creates a new Uno card with the specified card value and color.
+     * Creates a new Uno card with the specified card value and color, LIGHT SIDE ONLY.
      *
-     * @param cardValue The value of the card (e.g., NUMBER, SKIP, REVERSE).
+     * @param cardValue The value of the card (e.g., NUMBER, SKIP, REVERSE, DRAW_ONE, WILD, WILD_DRAW_TWO).
      * @param cardColour The colour of the card (e.g., RED, BLUE, GREEN, YELLOW, or WILD).
      */
     public Card_Model(CardValue cardValue, CardColour cardColour) {
-        this.VALUE = cardValue;
-        this.COLOUR = cardColour;
+        this.LIGHT_SIDE_VALUE = cardValue;
+        this.LIGHT_SIDE_COLOUR = cardColour;
+        this.DARK_SIDE_VALUE = cardValue;
+        this.DARK_SIDE_COLOUR = cardColour;
+        this.currentCardSide = CardSide.LIGHT_SIDE;
     }
 
     /**
-     * Sets the path to the Image file
+     * Creates a new Uno card with the specified card value and color for LIGHT SIDE and DARK SIDE
+     *
+     * @param lightCardValue The value of the card (e.g., NUMBER, SKIP, REVERSE, DRAW_ONE, WILD, WILD_DRAW_TWO).
+     * @param lightCardColour The colour of the card (e.g., RED, BLUE, GREEN, YELLOW, or WILD).
      */
-    public void setPathToImageFile() {
-        this.pathToImageFile = "images/" + this.toString() + ".jpg";
+    public Card_Model(CardValue lightCardValue, CardColour lightCardColour, CardValue darkCardValue, CardColour darkCardColour) {
+        this.LIGHT_SIDE_VALUE = lightCardValue;
+        this.LIGHT_SIDE_COLOUR = lightCardColour;
+        this.DARK_SIDE_VALUE = darkCardValue;
+        this.DARK_SIDE_COLOUR = darkCardColour;
+        this.currentCardSide = CardSide.LIGHT_SIDE;
     }
+
 
     /**
      * Gets the card value of this Uno card.
@@ -85,7 +112,7 @@ public class Card_Model {
      */
     public CardValue getCardValue() {
 
-        return this.VALUE;
+        return currentCardSide == CardSide.LIGHT_SIDE ? this.LIGHT_SIDE_VALUE : this.DARK_SIDE_VALUE;
     }
 
     /**
@@ -95,17 +122,40 @@ public class Card_Model {
      */
     public CardColour getColour() {
 
-        return this.COLOUR;
+        return currentCardSide == CardSide.LIGHT_SIDE ? this.LIGHT_SIDE_COLOUR : this.DARK_SIDE_COLOUR;
     }
 
+    public CardSide getCurrentCardSide(){
+        return this.currentCardSide;
+    }
 
-    /**
-     * Gets the path to the image file.
-     *
-     * @return The path to the image file.
-     */
-    public String getPathToImageFile() {
-        return this.pathToImageFile;
+    public int getCardScore(boolean isDarkSide){
+        CardValue value = isDarkSide ? this.DARK_SIDE_VALUE : this.LIGHT_SIDE_VALUE;
+        return value.getCardScore(isDarkSide);
+    }
+
+    public void flipCardSide(){
+        currentCardSide = (currentCardSide == CardSide.LIGHT_SIDE) ? CardSide.DARK_SIDE : CardSide.LIGHT_SIDE;
+    }
+
+    public void setCurrentCardSide(CardSide side){
+        this.currentCardSide = side;
+    }
+
+    public boolean isFlipCard() {
+        return getCardValue() == CardValue.FLIP;
+    }
+
+    public boolean isWildCard() {
+        return getCardValue() == CardValue.WILD || getCardValue() == CardValue.WILD_DRAW_COLOUR || getCardValue() == CardValue.WILD_DRAW_TWO;
+    }
+
+    public static boolean isLightSideColour(CardColour colour) {
+        return colour == CardColour.RED || colour == CardColour.BLUE || colour == CardColour.GREEN || colour == CardColour.YELLOW || colour == CardColour.WILD;
+    }
+
+    public static boolean isDarkSideColour(CardColour colour) {
+        return colour == CardColour.TEAL || colour == CardColour.PURPLE || colour == CardColour.PINK || colour == CardColour.ORANGE || colour == CardColour.WILD;
     }
 
     /**
@@ -115,6 +165,6 @@ public class Card_Model {
      */
     @Override
     public String toString() {
-        return  COLOUR + "_" + VALUE;
+        return  getColour() + "_" + getCardValue();
     }
 }

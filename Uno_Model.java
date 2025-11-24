@@ -382,7 +382,7 @@ public class Uno_Model {
      */
     public boolean isValidPlay(Card_Model card) {
         if (card == null) return false;
-        if (card.isWild()) return true;
+        if (card.isWildCard()) return true;
         return card.getColour() == matchColour || card.getCardValue() == matchType;
     }
 
@@ -404,7 +404,7 @@ public class Uno_Model {
         matchType = card.getCardValue();
         if (card.getColour() != Card_Model.CardColour.WILD) matchColour = card.getColour();
         player.removeCard(index);
-        stack.addToDiscard(card);
+        stack.addToDiscardPile(card);
 
         if (player.getNumCards() == 0) { endRound(player); return TurnAction.CARD_PLAYED; }
 
@@ -470,7 +470,7 @@ public class Uno_Model {
             p.flipAllCards();
         }
         if (activeCard != null) {
-            activeCard.flip();
+            activeCard.flipCardSide();
             matchColour = activeCard.getColour();
             matchType = activeCard.getCardValue();
         }
@@ -593,7 +593,7 @@ public class Uno_Model {
         for (Player_Model p : participants) {
             if (p != winner) {
                 for (Card_Model c : p.getHand()) {
-                    points += c.getScore(isDarkSide);
+                    points += c.getCardScore(isDarkSide);
                 }
             }
         }

@@ -391,13 +391,13 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      */
     private void checkAndProcessAI() {
         if (controller.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) return;
-        if (controller.isCurrentPlayerAI()) {
+        if (controller.isPlayerAI()) {
             setControlsEnabled(false);
             if (aiTimer != null) aiTimer.stop();
             aiTimer = new Timer(800, e -> {
                 aiTimer.stop();
                 String aiName = controller.getCurrentPlayer().getName();
-                controller.executeAITurn();
+                controller.processAITurn();
                 updateFullView();
                 if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
                     checkAndProcessAI();
