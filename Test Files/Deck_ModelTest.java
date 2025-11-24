@@ -168,7 +168,10 @@ public class Deck_ModelTest {
     }
 
     // UNO FLIP tests
-
+    /**
+     * Tests the getDiscardPile mehtod of the Deck_Model class
+     * - verifies that the discard pile is empty when the deck is created
+     */
     @Test
     public void test_getDiscardPile() {
         System.out.println("Testing Method getDiscardPile...");
@@ -176,12 +179,23 @@ public class Deck_ModelTest {
         assertEquals(0, pile.getDiscardPile().size());
 
     }
+
+    /**
+     * Tests the getIsDarkSide method of the Deck_Model class
+     * - verifies that the deck is initialized to the light side when created
+     */
     @Test
     public void test_getIsDarkSide() {
         System.out.println("Testing Method getIsDarkSide...");
         pile = new Deck_Model();
         assertFalse(pile.getIsDarkSide());
     }
+
+    /**
+     * Tests the flipDeck method of the Deck_Model class
+     * - verifies that the deck is flippped to the dark side
+     * - verifies that cards in the pile are changed to the dark side too
+     */
 
     @Test
     public void test_flipDeck() {
@@ -194,6 +208,10 @@ public class Deck_ModelTest {
         assertNotEquals(initSide, pile.getCard(0).getCurrentCardSide()); // test method changes cards in pile to darkside
     }
 
+    /**
+     * Tests the addToDiscardPile method of the Deck_Model class
+     * - verifies that a card is added to the discard pile
+     */
     @Test
     public void test_addToDiscardPile() {
         System.out.println("Testing Method addToDiscardPile...");
@@ -203,6 +221,11 @@ public class Deck_ModelTest {
         assertTrue(pile.getDiscardPile().contains(card));
     }
 
+    /**
+     * Tests the drawUntilColour method of the Deck_Model class
+     * - verifies that cards are drawn until a card of the specified colour is drawn
+     * - verifies that drawn card matches the expected colour and value
+     */
     @Test
     public void test_drawUntilColour() {
         System.out.println("Testing Method drawUntilColour...");
@@ -218,6 +241,11 @@ public class Deck_ModelTest {
         assertEquals(drawnCard.getCardValue(), Card_Model.CardValue.REVERSE);
     }
 
+    /**
+     * Tests the drawCardsUntilColour method of the Deck_Model class
+     * - verifies that cards are drawn until a card of the specified colour is drawn
+     * - verifies that all drawn cards are returned
+     */
     @Test
     public void test_drawCardsUntilColour(){
         System.out.println("Testing Method drawCardsUntilColour...");
@@ -233,6 +261,10 @@ public class Deck_ModelTest {
         assertEquals(Card_Model.CardColour.GREEN, drawnCards.get(1).getColour());
     }
 
+    /**
+     * Test the reshuffleFromDiscard method of the Deck_Model class
+     * - verifies that all cards except the latest are moved from the discard pile to the draw pile
+     */
     @Test
     public void test_reshuffleFromDiscard() {
         System.out.println("Testing Method reshuffleFromDiscard...");

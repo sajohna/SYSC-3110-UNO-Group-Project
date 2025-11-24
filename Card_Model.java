@@ -6,7 +6,14 @@
  * - Enums for card values and colours
  * - Creation of UNO cards with specific values and colours
  * - Methods to retrieve card properties
+ * - method to check for current card side
+ * - method to set current card side
+ * - method to flip the card side
+ * - methods to check card type (flip, wild)
+ * - method to check if a colour belongs to light or dark side
+ * - get card score based on side
  * - String representation of the card
+ * 
  * 
  * Data Structure Design:
  * - Enum of CardVlue: Represents the differnet values of a UNO card
@@ -19,18 +26,22 @@
  *    * Fixed set of constants: Card colours are predfined/determined set to not change
  *    * Allows for types safety: prevents invalid colours from being assigned to cards
  *    * Readability: makes code more understandable by using descriptive names for card colours
- * - final CardValue Value: Stores the value of the card
+ * - Enum of CardSide: Represents the different sides of a UNO card
+ *  ENUM chose for:
+ *   * Fixed set of constants: Card sides are predfined/determined set to not change
+ *   * Allows for types safety: prevents invalid sides from being assigned to cards
+ *   * Readability: makes code more understandable by using descriptive names for card sides
+ * - final CardValue LIGHT_SIDE_VALUE, DARK_SIDE_VALUE: Stores the value of the card
  *   final chose for:
  *    * Immutability: ensure that once a card is created, its value cannot be changed
  *    * Consistency: maintains the card's properties throughout its lifecycle
- * - final CardColour Colour: Stores the colour of the card 
+ * - final CardColour LIGHT_SIDE_COLOUR, DARK_SIDE_COLOUR: Stores the colour of the card 
  *   final chose for:
  *    * Immutability: ensure that once a card is created, its colour cannot be changed
  *    * Consistency: maintains the card's properties throughout its lifecycle  
- * 
- * Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
- * Ideally, the model should only have the deck logic which is then implemented to be used with the game logic
- * with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
+ * - CardSide currentCardSide: Stores the current side of the card
+ *  non-final chose for:
+ *   * Mutability: allows the card side to be changed (flipped) during gameplay
  * 
  * @author Lasya Erukulla
  * @version 3.0 - Milestone 3
@@ -127,36 +138,71 @@ public class Card_Model {
 
         return currentCardSide == CardSide.LIGHT_SIDE ? this.LIGHT_SIDE_COLOUR : this.DARK_SIDE_COLOUR;
     }
-
+    /**
+     * Gets the current side of the card
+     * 
+     * @return the current side of the crad
+     */
     public CardSide getCurrentCardSide(){
         return this.currentCardSide;
     }
 
+    /**
+     * Gets the score of the card based on sid
+     * 
+     * @param isDarkSide boolean indicating if the card is on the dark side
+     * @return the score of the card
+     */
     public int getCardScore(boolean isDarkSide){
         CardValue value = isDarkSide ? this.DARK_SIDE_VALUE : this.LIGHT_SIDE_VALUE;
         return value.getCardScore(isDarkSide);
     }
 
+    /**
+     * Flips the card to the opposite side
+     */
     public void flipCardSide(){
         currentCardSide = (currentCardSide == CardSide.LIGHT_SIDE) ? CardSide.DARK_SIDE : CardSide.LIGHT_SIDE;
     }
 
+    /**
+     * Sets the current side of the card
+     * @param side the side to set the card to
+     */
     public void setCurrentCardSide(CardSide side){
         this.currentCardSide = side;
     }
 
+    /**
+     * Checks if the card is a flip card
+     * @return boolean indicating if the card is a flip card
+     */
     public boolean isFlipCard() {
         return getCardValue() == CardValue.FLIP;
     }
 
+     /**
+     * Checks if the card is a wild card
+     * @return boolean indicating if the card is a wild card
+     */
     public boolean isWildCard() {
         return getCardValue() == CardValue.WILD || getCardValue() == CardValue.WILD_DRAW_COLOUR || getCardValue() == CardValue.WILD_DRAW_TWO;
     }
 
+    /**
+     * Checks if the given colour belongs to the light side
+     * @param color the colour to check
+     * @return boolean indicaitng if the colour is a light side colour
+     */
     public static boolean isLightSideColour(CardColour colour) {
         return colour == CardColour.RED || colour == CardColour.BLUE || colour == CardColour.GREEN || colour == CardColour.YELLOW || colour == CardColour.WILD;
     }
 
+    /**
+     * Checks if the given colour belongs to the dark side
+     * @param color the colour to check
+     * @return boolean indicaitng if the colour is a dark side colour
+     */
     public static boolean isDarkSideColour(CardColour colour) {
         return colour == CardColour.TEAL || colour == CardColour.PURPLE || colour == CardColour.PINK || colour == CardColour.ORANGE || colour == CardColour.WILD;
     }

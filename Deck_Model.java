@@ -11,6 +11,12 @@ import java.util.Collections;
  * - Drawing a card from the deck
  * - Check if the deck is empty
  * - Get the number of remaining cards in the deck
+ * - Flip the deck to the other side
+ * - reshuffle the deck from the discard pile 
+ * - draw until a specific colour is drawn, return card
+ * - draw until a specific colour is drawn, return list of cards drawn
+ * - add a card to the discard pile
+ * - check if the deck is on the dark side or light side
  * - Get all cards or specific card in the deck 
  * 
  * Data Structure Design:
@@ -19,12 +25,17 @@ import java.util.Collections;
  *      * Dynamic sizing: can grow/shrink as cards are drawn from the draw pile
  *      * Easy access: allows efficient access to cards by index
  *      * Built-in methods: provides useful methods like shuffle to shuffle cards in the draw pile
+ * - ArrayList of Card_Model: Stores the cards in the discard pile
+ *   ArrayList choosen for:
+ *      * Dynamic sizing: can grow/shrink as cards are drawn from the discard pile
+ *      * Easy access: allows efficient access to cards by index
+ *      * Built-in methods: provides useful methods like shuffle to shuffle cards in the discard pile
  * - int numDrawCards: Keeps track of the number of cards remaining in the draw pile
  *      * Simple counter to track the number of cards remaining in the draw pile
+ * - boolean isDarkSide: keeps track of whether the deck is on the dark side or light side
+ *   boolean chose for:
+ *   * simple state tracking: represents a binary state (dark or light side)
  * 
- * Incomplete Implementation Documentation - This model is made so that it works on a text based interface. 
- * Ideally, the model should only have the deck logic which is then implemented to be used with the game logic
- * with a GUI through the Controller and Viewer. This will be implemented in the next milestone.
  * 
  * @author Lasya Erukulla
  * @version 3.0 - Milestone 3
@@ -136,7 +147,7 @@ public class Deck_Model {
     }
 
     /**
-     * Returns the all the cards in the drawPile as an ArrayList
+     * Returns the all the cards in the drawPile as an ArrayList. Face doen cards.
      *
      * @return an ArrayList of Cards
      */
@@ -144,6 +155,11 @@ public class Deck_Model {
         return drawPile;
     }
 
+    /**
+     * Returns the all the cards in the discardPile as an ArrayList. Face up carsds.
+     *
+     * @return an ArrayList of Cards
+     */
     public ArrayList<Card_Model> getDiscardPile() {
         return discardPile;
     }
@@ -158,11 +174,18 @@ public class Deck_Model {
         return drawPile.get(i);
     }
 
+    /**
+     * Gets whether the deck is on the dark side
+     * 
+     * @return boolean indicatinf if the deck is on the dark side
+     */
     public boolean getIsDarkSide() {
         return isDarkSide;
     }
 
-
+    /**
+     * Flips all cards in the deck to the other side
+     */
     public void flipDeck(){
         isDarkSide = !isDarkSide;
         for (Card_Model card : drawPile){
@@ -186,6 +209,12 @@ public class Deck_Model {
         return card;
     }
 
+    /**
+     * Draws cards from the drawPile until a card of the specified colour is dramn
+     * 
+     * @param colour the colour of the card to draw until
+     * @return the drawn card of the specified colour 
+     */
     public Card_Model drawUntilColour(Card_Model.CardColour colour) {
         Card_Model card = null;
         while (!isEmpty()) {
@@ -199,6 +228,12 @@ public class Deck_Model {
         return card;
     }
 
+    /**
+     * Draws cards from the drawPile until a card of the specified colour is drawn
+     * 
+     * @param colour the colour of the card to draw until
+     * @return the list of drawn cards 
+     */
     public ArrayList<Card_Model> drawCardsUntilColour(Card_Model.CardColour colour) {
         ArrayList<Card_Model> drawnCards = new ArrayList<>();
 
@@ -214,11 +249,17 @@ public class Deck_Model {
         return drawnCards;
     }
 
+    /**
+     * Adds a card to the discard pile
+     * @param card the card to add to the discard pile
+     */
     public void addToDiscardPile(Card_Model card) {
         discardPile.add(card);
     }
 
-
+    /**
+     * Reshuffled the drawpile from the discard pile, keeps the top card in the discard pile
+     */
     public void reshuffleFromDiscard() {
         if (discardPile.size() < 1) return;
         Card_Model topCard = discardPile.remove(discardPile.size() - 1);

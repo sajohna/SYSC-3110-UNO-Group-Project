@@ -123,7 +123,7 @@ public class Uno_Controller implements ActionListener {
      * Create players for the UNO game and add them to the UNO model
      *
      * @param numPlayers: int the number of players to be created
-     * @param numAIPlayers: 
+     * @param numAIPlayers: int the number of AI players to be created
      */
     public void createPlayers(int numPlayers, int numAIPlayers){
         for (int i = 0; i <numPlayers; i++) {
@@ -136,6 +136,12 @@ public class Uno_Controller implements ActionListener {
         }
     }
 
+    /**
+     * Create players for the UNO game and add them to the UNO model
+     * 
+     * @param isAIList: List<Boolean> lsit indicating if the player at the index is an AI or human
+     * @param names: List<String> list of names for the player, if null or empty default names will be used
+     */
     public void createPlayersWithConfig(List<Boolean> isAIList, List<String> names){
         for (int i = 0; i < isAIList.size(); i++){
             String name = (names != null && !names.isEmpty()) ? names.get(i) : "Player" + i;
@@ -224,11 +230,19 @@ public class Uno_Controller implements ActionListener {
         }
         return false;
     }
-    /// Methods for AI
+    /* Methods for AI */
+    /**
+     * Check if the current player is an AI
+     */
     public boolean isPlayerAI(){
         return uno.isCurrentPlayerAI();
     }
 
+    /**
+     * Proces the AI player's turn
+     * 
+     * @return boolean indicating if the AI turn was processed
+     */
     public boolean processAITurn(){
         if(!isPlayerAI()) return false;
         if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
@@ -258,7 +272,10 @@ public class Uno_Controller implements ActionListener {
         }
 
     }
-
+    
+    /**
+     * Process AI turns until it is a human player's turn
+     */
     public void processAITurnsUntilHuman() {
         while (isPlayerAI() && 
                uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
@@ -367,7 +384,10 @@ public class Uno_Controller implements ActionListener {
     public boolean isGameOver(){
         return uno.isGameOver();
     }
-
+    /**
+     * Check if the deck is on the dark side
+     * @return boolean indicating if the deck is on the dark side
+     */
     public boolean isDarkSide(){
         return uno.isDarkSide();
     }

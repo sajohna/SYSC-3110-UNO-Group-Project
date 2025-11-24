@@ -80,7 +80,7 @@ public class Card_ModelTest {
         assertEquals("GREEN_NINE", card.toString());
     }
 
-    // Uno Flip tests
+    /** Uno Flip tests */
     /**
      * Tests the flip constructor of the Card_Model class
      * - verifies that the card value is equal to the expected value by the constructor
@@ -96,6 +96,10 @@ public class Card_ModelTest {
         assertEquals(Card_Model.CardSide.LIGHT_SIDE, card.getCurrentCardSide());
     }
 
+    /**
+     * Tests the getCurrentCardSide method of the Card_Model class
+     * - verifies that the returned current card side is equal to the expected default side LIGHT
+     */
     @Test
     public void test_getCurrentCardSide() {
         System.out.println("Testing Get Current Card Side...");
@@ -103,6 +107,13 @@ public class Card_ModelTest {
         assertEquals(Card_Model.CardSide.LIGHT_SIDE, card.getCurrentCardSide());
     }
 
+    /**
+     * Tests the setCurrentCardSide method of the Card_Model class
+     * - verifies that after setting the current card side to DARK_SIDE
+     * - verfifeis the card value is equal to the expected dark side value
+     * - verifies the card colout is equal to the expected dark side colour
+     * - verifies the current card side is equal to DARK_SIDE
+     */
     @Test
     public void test_setCurrentCardSide() {
         System.out.println("Testing Set Current Card Side...");
@@ -113,6 +124,10 @@ public class Card_ModelTest {
         assertEquals(Card_Model.CardSide.DARK_SIDE, card.getCurrentCardSide());
     }
 
+    /**
+     * Tests the getCardScore method of the Card_Model class
+     * - verifies that the returned light side score is equal to the expected value
+     */
     @Test
     public void test_lightSideScore() {
         System.out.println("Testing Light Side Score...");
@@ -120,6 +135,10 @@ public class Card_ModelTest {
         assertEquals(5, card.getCardScore(false));
     }
 
+    /**
+     * Tests the getCardScore method of the Card_Model class
+     * - verifies that the returned dark side score is equal to the expected value
+     */
     @Test
     public void test_darkSideScore() {
         System.out.println("Testing Dark Side Score...");
@@ -127,6 +146,10 @@ public class Card_ModelTest {
         assertEquals(20, card.getCardScore(true));
     }
 
+    /**
+     * Tests the flipCardSide method of the Card_Model class
+     * - verifies that after flipping the card side, the current card side is equla to DARK_SIDE
+     */
     @Test
     public void test_flipCardSide() {
         System.out.println("Testing Flip Card Side...");
@@ -135,6 +158,11 @@ public class Card_ModelTest {
         assertEquals(Card_Model.CardSide.DARK_SIDE, card.getCurrentCardSide());
     }
 
+    /**
+     * Tests the isFlipCard method of the Card_Model class
+     * - verifies that a non-flip card return false
+     * - verfies that a flip card returns true
+     */
     @Test
     public void test_isFlipCard() {
         System.out.println("Testing Flip Card Side...");
@@ -144,6 +172,12 @@ public class Card_ModelTest {
         assertTrue(card.isFlipCard());
     }
 
+    /**
+     * Tests the isWildCard method of the Card_Model class
+     * - verifies that a WILD card return true
+     * - verifies that a WILD_DRAW_TWO card returns true
+     * - verifies that a WILD_DRAW_COLOUR card returns true
+     */
     @Test
     public void test_isWildCard() {
         System.out.println("Testing Flip Card Side...");
@@ -157,6 +191,10 @@ public class Card_ModelTest {
         assertFalse(card.isWildCard());
     }
 
+    /**
+     * Tests the isDarkSideColour static method of the Card_Model class
+     * - verfies that teal, orange, pink, purple and wild colours return true
+     */
     @Test
     public void test_isDarkSideCard() {
         System.out.println("Testing Dark Side Card Side...");
@@ -167,6 +205,11 @@ public class Card_ModelTest {
         assertTrue(Card_Model.isDarkSideColour(Card_Model.CardColour.WILD));
     }
 
+
+     /**
+     * Tests the isLightSideColour static method of the Card_Model class
+     * - verfies that red, blue, green, yellow and wild colours return true
+     */
     @Test
     public void test_isLightSideCard() {
         System.out.println("Testing Light Side Card Side...");
