@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Validates core game mechanics, turn management, card validation, and game state transitions.
  *
  * @author Saan John
- * @version 3.0 - Milestone 3
+ * @version 4.0 - Milestone 4 + Milestone 5
  */
 public class Uno_ModelTest {
     private Uno_Model game;
@@ -444,5 +444,136 @@ public class Uno_ModelTest {
             game.advanceToNextTurn();
             assertTrue(game.isCurrentPlayerAI());
         }
+    }
+
+    /**
+     * Tests that timed mode timer methods handle disabled state correctly.
+     * Verifies:
+     *   - getRemainingTurnTime returns -1 when timed mode is disabled
+     *   - isTurnTimeExpired returns false when timed mode is disabled
+     *   - handleTurnTimeout returns INVALID_PLAY when timed mode is disabled
+     */
+    @Test
+    @DisplayName("Timed mode methods handle disabled state correctly")
+    void testTimedModeDisabledBehavior() {
+        game.setTimedModeEnabled(false); // Keep disabled
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        // All timer queries should indicate disabled state
+        assertEquals(-1, game.getRemainingTurnTime());
+        assertFalse(game.isTurnTimeExpired());
+        assertEquals(Uno_Model.TurnAction.INVALID_PLAY, game.handleTurnTimeout());
+    }
+
+    /**
+     * Tests that timed mode timer returns correct values based on enabled state.
+     * Verifies:
+     *   - getRemainingTurnTime returns -1 when timed mode is disabled
+     *   - isTurnTimeExpired returns false when timed mode is disabled
+     *   - handleTurnTimeout returns INVALID_PLAY when timer is not expired
+     */
+    @Test
+    @DisplayName("Timed mode timer queries work correctly")
+    void testTimedModeTimerQueries() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        // Timed mode disabled - all timer queries should indicate disabled state
+        assertFalse(game.isTimedModeEnabled());
+        assertEquals(-1, game.getRemainingTurnTime(),
+                "getRemainingTurnTime should return -1 when timed mode disabled");
+        assertFalse(game.isTurnTimeExpired(),
+                "isTurnTimeExpired should return false when timed mode disabled");
+        assertEquals(Uno_Model.TurnAction.INVALID_PLAY, game.handleTurnTimeout(),
+                "handleTurnTimeout should return INVALID_PLAY when timed mode disabled");
+
+        // Enable timed mode
+        game.resetGame();
+        game.setTimedModeEnabled(true);
+        game.setTurnTimeLimit(30);
+
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.initializeGame();
+
+        // With timed mode enabled, timer should be active
+        assertTrue(game.isTimedModeEnabled());
+        assertNotEquals(-1, game.getRemainingTurnTime(),
+                "getRemainingTurnTime should not be -1 when timed mode enabled");
+        assertFalse(game.isTurnTimeExpired(),
+                "isTurnTimeExpired should be false immediately after game starts");
+        assertTrue(game.getRemainingTurnTime() <= 30 && game.getRemainingTurnTime() >= 0,
+                "Remaining time should be within time limit");
+    }
+
+    /**
+     * Tests undo/redo restoration methods for game state preservation.
+     * Verifies:
+     *   - Turn index can be saved and restored
+     *   - Play direction can be saved and restored
+     *   - Active card can be saved and restored
+     *   - Match colour can be saved and restored
+     *   - Match type can be saved and restored
+     *   - Dark side flag can be saved and restored
+     *   - Pending colour selection flags can be saved and restored
+     */
+    @Test
+    @DisplayName("Undo/redo state restoration methods work correctly")
+    void testUndoRedoStateRestoration() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+        game.addPlayer(player3);
+        game.initializeGame();
+
+        // Save initial state
+        int initialTurnIdx = game.getCurrentTurnIndex();
+        int initialPlayDirection = game.getPlayDirection();
+        Card_Model initialActiveCard = game.getActiveCard();
+        Card_Model.CardColour initialMatchColour = game.getMatchColour();
+        Card_Model.CardValue initialMatchType = game.getMatchType();
+        boolean initialIsDarkSide = game.isDarkSide();
+        boolean initialPendingColourSelection = game.isPendingColourSelection();
+        boolean initialPendingDrawColourSelection = game.isPendingDrawColourSelection();
+
+        // Modify game state
+        game.advanceToNextTurn();
+        game.reversePlayDirection();
+        game.flipAllCards();
+
+        // Verify state changed
+        assertNotEquals(initialTurnIdx, game.getCurrentTurnIndex());
+        assertNotEquals(initialPlayDirection, game.getPlayDirection());
+        assertNotEquals(initialIsDarkSide, game.isDarkSide());
+
+        // Restore state using undo/redo setter methods
+        game.setCurrentTurnIndex(initialTurnIdx);
+        game.setPlayDirection(initialPlayDirection);
+        game.setActiveCard(initialActiveCard);
+        game.setMatchColour(initialMatchColour);
+        game.setMatchType(initialMatchType);
+        game.setIsDarkSide(initialIsDarkSide);
+        game.setPendingColourSelection(initialPendingColourSelection);
+        game.setPendingDrawColourSelection(initialPendingDrawColourSelection);
+
+        // Verify state is restored
+        assertEquals(initialTurnIdx, game.getCurrentTurnIndex(),
+                "Turn index should be restored");
+        assertEquals(initialPlayDirection, game.getPlayDirection(),
+                "Play direction should be restored");
+        assertEquals(initialActiveCard, game.getActiveCard(),
+                "Active card should be restored");
+        assertEquals(initialMatchColour, game.getMatchColour(),
+                "Match colour should be restored");
+        assertEquals(initialMatchType, game.getMatchType(),
+                "Match type should be restored");
+        assertEquals(initialIsDarkSide, game.isDarkSide(),
+                "Dark side flag should be restored");
+        assertEquals(initialPendingColourSelection, game.isPendingColourSelection(),
+                "Pending colour selection should be restored");
+        assertEquals(initialPendingDrawColourSelection, game.isPendingDrawColourSelection(),
+                "Pending draw colour selection should be restored");
     }
 }
