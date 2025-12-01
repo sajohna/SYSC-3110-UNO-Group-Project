@@ -1,4 +1,5 @@
 import java.util.*;
+import java.io.Serializable;
 
 /**
  * Model class representing the core game logic for UNO Flip.
@@ -11,6 +12,7 @@ import java.util.*;
  *   - Card validation and special card effects (SKIP, REVERSE, DRAW, WILD, FLIP)
  *   - Light/Dark side card flipping (UNO Flip mechanic)
  *   - Scoring and win condition checking (first to 500 points)
+ *   - Turn timer
  *
  * Game flow:
  *   1. Add 2-4 players using addPlayer(Player_Model)
@@ -50,9 +52,9 @@ import java.util.*;
  *         * Elegant bidirectional turn traversal with single formula
  *
  *   - boolean isDarkSide: Tracks which side of cards is currently active.
- *         * Affects card colors (light: R/B/G/Y, dark: Teal/Purple/Pink/Orange)
- *         * Affects card scoring values
- *         * Toggled by FLIP card effect
+ *       * Affects card colors (light: R/B/G/Y, dark: Teal/Purple/Pink/Orange)
+ *       * Affects card scoring values
+ *       * Toggled by FLIP card effect
  *
  *   - boolean pendingColourSelection: Tracks if waiting for wild card colour choice.
  *         * Set true when WILD or WILD_DRAW_TWO played
@@ -62,14 +64,38 @@ import java.util.*;
  *         * Dark side exclusive card effect
  *         * Next player draws until specified colour appears
  *
+ *   - boolean timedModeEnabled: Toggles whether turn timer is active.
+ *         * Can only be modified before game starts (IN_PROGRESS check)
+ *         * When enabled, startTurnTimer() records turn start time
+ *         * When disabled, timer methods return -1 or false
+ *
+ *   - int turnTimeLimitSeconds: Configurable time limit per turn in seconds.
+ *         * Valid range: MIN_TURN_TIME_SECONDS (10) to MAX_TURN_TIME_SECONDS (60)
+ *         * Defaults to DEFAULT_TURN_TIME_SECONDS (30)
+ *         * Can only be modified before game starts
+ *
+ *   - long turnStartTime: Records system time when current turn begins.
+ *       Usage:
+ *         * Set by startTurnTimer() at turn initialization
+ *         * Cleared by stopTurnTimer() and during game reset/round transitions
+ *         * Used to calculate getRemainingTurnTime() and isTurnTimeExpired()
+ *         * Zero value indicates timer not actively running
+ *
+ *    - long serialVersionUID: Version identifier for serialization compatibility.
+ *         * Ensures deserialized objects are compatible with current class definition
+ *
  * @author Saan John
- * @version 3.0 - Milestone 3
+ * @version 4.0 - Milestone 4 + Milestone 5
  */
-public class Uno_Model {
+public class Uno_Model implements Serializable {
     private static final int CARDS_PER_PLAYER = 7;
     private static final int MIN_PARTICIPANTS = 2;
     private static final int MAX_PARTICIPANTS = 4;
     private static final int TARGET_SCORE = 500;
+    private static final int DEFAULT_TURN_TIME_SECONDS = 30;
+    private static final int MIN_TURN_TIME_SECONDS = 10;
+    private static final int MAX_TURN_TIME_SECONDS = 60;
+    private static final long serialVersionUID = 2L;
 
     public enum GameStatus {
         NOT_STARTED,
@@ -82,7 +108,8 @@ public class Uno_Model {
         CARD_DRAWN,
         TURN_PASSED,
         INVALID_PLAY,
-        INVALID_CARD_INDEX
+        INVALID_CARD_INDEX,
+        TIME_EXPIRED
     }
     public enum SpecialCardEffect {
         NONE,
@@ -111,6 +138,9 @@ public class Uno_Model {
     private Map<Player_Model, Integer> roundScores;
     private boolean pendingDrawColourSelection;
     private boolean isDarkSide;
+    private boolean timedModeEnabled;
+    private int turnTimeLimitSeconds;
+    private long turnStartTime;
 
     /**
      * Constructs a new Uno_Model and initializes game state.
@@ -127,6 +157,9 @@ public class Uno_Model {
         roundScores = new HashMap<>();
         pendingDrawColourSelection = false;
         isDarkSide = false;
+        timedModeEnabled = false;
+        turnTimeLimitSeconds = DEFAULT_TURN_TIME_SECONDS;
+        turnStartTime = 0;
     }
 
     // ======== GETTERS ========
@@ -271,6 +304,9 @@ public class Uno_Model {
      * Sets game status to IN_PROGRESS.
      */
     public void initializeGame() {
+        if (participants.size() < MIN_PARTICIPANTS || participants.size() > MAX_PARTICIPANTS) {
+            throw new IllegalStateException("Game requires " + MIN_PARTICIPANTS + " to " + MAX_PARTICIPANTS + " players");
+        }
         distributeInitialCards();
         do { initialCard = stack.draw(); }
         while (initialCard.getCardValue() == Card_Model.CardValue.WILD_DRAW_TWO ||
@@ -281,6 +317,7 @@ public class Uno_Model {
         matchType = initialCard.getCardValue();
         status = GameStatus.IN_PROGRESS;
         processInitialCardEffect();
+        startTurnTimer();
     }
 
     /**
@@ -351,7 +388,10 @@ public class Uno_Model {
      * Handles wrapping around the player list in both directions using modulo arithmetic.
      */
     public void advanceToNextTurn() {
+        stopTurnTimer();
         turnIdx = (turnIdx + playDirection + participants.size()) % participants.size();
+
+        startTurnTimer();
     }
 
     /**
@@ -369,6 +409,7 @@ public class Uno_Model {
      */
     public void skipAllOtherPlayers() {
         // Current player plays again - no turn advancement
+        startTurnTimer();
     }
 
     /**
@@ -380,11 +421,43 @@ public class Uno_Model {
         if (participants.size() == 2) {
             // In 2-player game, current player plays again - don't advance turn
             // This is functionally like SKIP_EVERYONE
+            startTurnTimer();
         } else {
             // In 3-4 player games, reverse the direction
             playDirection *= -1;
         }
     }
+
+    /**
+     * Gets the play direction (for undo/redo)
+     * @return  play Direction
+     */
+    public int getPlayDirection() {
+        return playDirection;
+    }
+
+    /**
+     * Sets the play direction (for undo/redo restoration)
+     */
+    public void setPlayDirection(int direction) {
+        this.playDirection = direction;
+    }
+
+    /**
+     * Gets the current turn index (for undo/redo)
+     * @return turn Index
+     */
+    public int getCurrentTurnIndex() {
+        return turnIdx;
+    }
+
+    /**
+     * Sets the current turn index (for undo/redo restoration)
+     */
+    public void setCurrentTurnIndex(int index) {
+        this.turnIdx = index;
+    }
+
 
     // ======== CARD LOGIC ========
 
@@ -583,6 +656,54 @@ public class Uno_Model {
     }
 
     /**
+     * Sets the active card (for undo/redo restoration)
+     * @param card the player card to validate
+     */
+    public void setActiveCard(Card_Model card) {
+        this.activeCard = card;
+    }
+
+    /**
+     * Sets the match colour (for undo/redo restoration)
+     * @param colour the player card  colour to validate
+     */
+    public void setMatchColour(Card_Model.CardColour colour) {
+        this.matchColour = colour;
+    }
+
+    /**
+     * Sets the match type (for undo/redo restoration)
+     * @param type the player card type
+     */
+    public void setMatchType(Card_Model.CardValue type) {
+        this.matchType = type;
+    }
+
+    /**
+     * Sets whether game is on dark side (for undo/redo restoration)
+     * @param isDark to check which side of card is being played
+     */
+    public void setIsDarkSide(boolean isDark) {
+        this.isDarkSide = isDark;
+    }
+
+    /**
+     * Sets pending colour selection flag (for undo/redo restoration)
+     * @param pending checks if color selection is pending
+     */
+    public void setPendingColourSelection(boolean pending) {
+        this.pendingColourSelection = pending;
+    }
+
+    /**
+     * Sets pending draw colour selection flag (for undo/redo restoration)
+     * @param pending checks if color selection is pending
+     */
+    public void setPendingDrawColourSelection(boolean pending) {
+        this.pendingDrawColourSelection = pending;
+    }
+
+    /**
      * Validates that a colour is appropriate for the current side.
      * Light side uses: Red, Blue, Green, Yellow
      * Dark side uses: Teal, Purple, Pink, Orange
@@ -604,6 +725,7 @@ public class Uno_Model {
      * @param winner the Player_Model who emptied their hand
      */
     private void endRound(Player_Model winner) {
+        stopTurnTimer();
         int points = 0;
         for (Player_Model p : participants) {
             if (p != winner) {
@@ -640,6 +762,7 @@ public class Uno_Model {
         roundScores.clear();
         status = GameStatus.IN_PROGRESS;
         initializeGame();
+        turnStartTime = 0;
     }
 
     /**
@@ -661,6 +784,7 @@ public class Uno_Model {
         isDarkSide = false;
         status = GameStatus.NOT_STARTED;
         roundScores.clear();
+        turnStartTime = 0;
     }
 
     // ======== AI SUPPORT ========
@@ -697,6 +821,103 @@ public class Uno_Model {
         return current != null && current.isAI();
     }
 
+    // ======== TIMED MODE METHODS ========
+
+    /**
+     * Enables or disables timed mode for the game.
+     * Can only be modified when the game is not in progress.
+     *
+     * @param enabled true to enable timed mode, false to disable
+     * @return true if the setting was successfully changed, false if game is in progress
+     */
+    public boolean setTimedModeEnabled(boolean enabled) {
+        if (status == GameStatus.IN_PROGRESS) return false;
+        this.timedModeEnabled = enabled;
+        return true;
+    }
+
+    /**
+     * Checks if timed mode is currently enabled.
+     *
+     * @return true if timed mode is enabled, false otherwise
+     */
+    public boolean isTimedModeEnabled() {
+        return timedModeEnabled;
+    }
+
+    /**
+     * Sets the time limit per turn in seconds.
+     * Can only be modified when the game is not in progress.
+     * The time limit must be between MIN_TURN_TIME_SECONDS and MAX_TURN_TIME_SECONDS.
+     *
+     * @param seconds the time limit in seconds
+     * @return true if the time limit was successfully set, false if game is in progress or seconds is out of valid range
+     */
+    public boolean setTurnTimeLimit(int seconds) {
+        if (status == GameStatus.IN_PROGRESS) return false;
+        if (seconds < MIN_TURN_TIME_SECONDS || seconds > MAX_TURN_TIME_SECONDS) return false;
+        this.turnTimeLimitSeconds = seconds;
+        return true;
+    }
+
+    /**
+     * Gets the current turn time limit in seconds.
+     *
+     * @return the turn time limit in seconds
+     */
+    public int getTurnTimeLimit() {
+        return turnTimeLimitSeconds;
+    }
+
+    /**
+     * Starts the timer for the current turn.
+     * Only records the start time if timed mode is enabled.
+     */
+    private void startTurnTimer() {
+        if (timedModeEnabled) {
+            turnStartTime = System.currentTimeMillis();
+        }
+    }
+
+    /**
+     * Calculates the remaining time for the current turn in seconds.
+     * @return the remaining time in seconds, or -1 if timed mode is not enabled or timer hasn't started
+     */
+    public int getRemainingTurnTime() {
+        if (!timedModeEnabled || turnStartTime == 0) return -1;
+        long elapsed = (System.currentTimeMillis() - turnStartTime) / 1000;
+        int remaining = turnTimeLimitSeconds - (int) elapsed;
+        return Math.max(0, remaining);
+    }
+
+    /**
+     * Checks if the current turn's time limit has expired.
+     *
+     * @return true if timed mode is enabled and time has expired, false otherwise
+     */
+    public boolean isTurnTimeExpired() {
+        if (!timedModeEnabled || turnStartTime == 0) return false;
+        return getRemainingTurnTime() <= 0;
+    }
+
+    /**
+     * Handles the turn timeout by forcing the current player to draw a card and advancing to the next turn.
+     * @return TurnAction.TIME_EXPIRED if timeout was processed, TurnAction.INVALID_PLAY if timed mode is not enabled or time hasn't expired
+     */
+    public TurnAction handleTurnTimeout() {
+        if (!timedModeEnabled || !isTurnTimeExpired()) return TurnAction.INVALID_PLAY;
+        getCurrentPlayer().drawCard(stack);
+        advanceToNextTurn();
+        return TurnAction.TIME_EXPIRED;
+    }
+
+    /**
+     * Stops the current turn timer by resetting the start time.
+     */
+    private void stopTurnTimer() {
+        turnStartTime = 0;
+    }
+
     /**
      * Generates a formatted string representation of the current game state.
      * Includes side (light/dark), active card, match colour, deck size, direction,
@@ -722,6 +943,12 @@ public class Uno_Model {
         participants.forEach(p -> sb.append(p.getName())
                 .append(p.isAI() ? " (AI)" : "")
                 .append(": ").append(p.getScore()).append("\n"));
+        if (timedModeEnabled) {
+            sb.append("Timed Mode: ENABLED (").append(turnTimeLimitSeconds).append("s)\n");
+            if (turnStartTime > 0) {
+                sb.append("Time Remaining: ").append(getRemainingTurnTime()).append("s\n");
+            }
+        }
         return sb.toString();
     }
 }
