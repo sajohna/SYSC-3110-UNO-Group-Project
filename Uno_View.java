@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * View component for UNO Flip.
@@ -23,7 +26,7 @@ import java.util.List;
  *         * Different layout managers (BorderLayout, FlowLayout, BoxLayout, GridLayout)
  *
  * @author Lucas Baker
- * @version 3.0 - Milestone 3
+ * @version 4.0 - Milestone 4
  */
 public class Uno_View extends JFrame implements Uno_ViewHandler {
     private Uno_Controller controller;
@@ -44,6 +47,15 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     private int selectedPlayerCount = 2;
     private Timer aiTimer;
     private JTextArea actionLogArea;
+    private JButton undoButton;
+    private JButton redoButton;
+    private JButton saveButton;
+    private JButton loadButton;
+    private JLabel undoRedoStatusLabel;
+    private JLabel timerLabel;
+    private Timer uiUpdateTimer;
+    private JCheckBox timedModeCheckBox;
+    private JSpinner timeLimitSpinner;
 
     /**
      * Constructs the UNO view, initializes components, listeners, and displays the setup panel.
@@ -60,6 +72,13 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         initializeComponents();
         setupLayout();
         attachListeners();
+        uiUpdateTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateTimerDisplay();
+            }
+        });
+        uiUpdateTimer.start();
         showSetupPanel();
         setVisible(true);
     }
@@ -87,6 +106,11 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         currentPlayerLabel = new JLabel("Current Player: None");
         currentPlayerLabel.setForeground(Color.YELLOW);
 
+        timerLabel = new JLabel("Time: --s");
+        timerLabel.setForeground(Color.WHITE);
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        timerLabel.setVisible(false);
+
         topPanel.add(sideLabel);
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(currentPlayerLabel);
@@ -94,6 +118,9 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         topPanel.add(activeCardLabel);
         topPanel.add(matchColorLabel);
         topPanel.add(deckCountLabel);
+
+        topPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        topPanel.add(timerLabel);
 
         centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBackground(new Color(34, 139, 34));
@@ -147,6 +174,56 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         newGameButton = new JButton("New Game");
         newGameButton.setPreferredSize(new Dimension(150, 40));
         newGameButton.setVisible(false);
+
+        // Create Undo/Redo panel
+        JPanel undoRedoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        undoRedoPanel.setBackground(new Color(60, 179, 113));
+
+        undoButton = new JButton("Undo");
+        undoButton.setPreferredSize(new Dimension(100, 35));
+        undoButton.setEnabled(false);
+
+        redoButton = new JButton("Redo");
+        redoButton.setPreferredSize(new Dimension(100, 35));
+        redoButton.setEnabled(false);
+
+        undoRedoStatusLabel = new JLabel("");
+        undoRedoStatusLabel.setForeground(Color.WHITE);
+        undoRedoStatusLabel.setFont(new Font("Arial", Font.ITALIC, 10));
+
+        undoRedoPanel.add(undoButton);
+        undoRedoPanel.add(redoButton);
+        undoRedoPanel.add(undoRedoStatusLabel);
+
+        JPanel saveLoadPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        saveLoadPanel.setBackground(new Color(60, 179, 113));
+
+        saveButton = new JButton("Save Game");
+        saveButton.setPreferredSize(new Dimension(120, 35));
+
+        loadButton = new JButton("Load Game");
+        loadButton.setPreferredSize(new Dimension(120, 35));
+
+        saveLoadPanel.add(saveButton);
+        saveLoadPanel.add(loadButton);
+
+        bottomPanel.removeAll();
+        bottomPanel.setLayout(new BorderLayout(10, 5));
+
+        JPanel mainControlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
+        mainControlsPanel.setBackground(new Color(60, 179, 113));
+        mainControlsPanel.add(drawCardButton);
+        mainControlsPanel.add(nextTurnButton);
+        mainControlsPanel.add(newRoundButton);
+        mainControlsPanel.add(newGameButton);
+
+        JPanel auxiliaryPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        auxiliaryPanel.setBackground(new Color(60, 179, 113));
+        auxiliaryPanel.add(undoRedoPanel);
+        auxiliaryPanel.add(saveLoadPanel);
+
+        bottomPanel.add(mainControlsPanel, BorderLayout.CENTER);
+        bottomPanel.add(auxiliaryPanel, BorderLayout.SOUTH);
 
         bottomPanel.add(drawCardButton);
         bottomPanel.add(nextTurnButton);
@@ -272,6 +349,11 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         nextTurnButton.addActionListener(e -> handleNextTurn());
         newRoundButton.addActionListener(e -> handleNewRound());
         newGameButton.addActionListener(e -> handleNewGame());
+
+        undoButton.addActionListener(e -> handleUndo());
+        redoButton.addActionListener(e -> handleRedo());
+        saveButton.addActionListener(e -> handleSaveGame());
+        loadButton.addActionListener(e -> handleLoadGame());
 
         redButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.RED));
         blueButton.addActionListener(e -> handleColorSelection(Card_Model.CardColour.BLUE));
@@ -431,6 +513,118 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             showError("Invalid color for current side!");
         }
     }
+
+    /**
+     * Handles undo button click.
+     */
+    private void handleUndo() {
+        if (controller.isPlayerAI()) {
+            showError("Cannot undo during AI turn!");
+            return;
+        }
+
+        if (controller.undo()) {
+            logAction("Action undone");
+            undoRedoStatusLabel.setText("Undone");
+            Timer timer = new Timer(2000, e -> undoRedoStatusLabel.setText(""));
+            timer.setRepeats(false);
+            timer.start();
+        } else {
+            showError("Nothing to undo!");
+        }
+    }
+
+    /**
+     * Handles redo button click.
+     */
+    private void handleRedo() {
+        if (controller.isPlayerAI()) {
+            showError("Cannot redo during AI turn!");
+            return;
+        }
+
+        if (controller.redo()) {
+            logAction("Action redone");
+            undoRedoStatusLabel.setText("Redone");
+            Timer timer = new Timer(2000, e -> undoRedoStatusLabel.setText(""));
+            timer.setRepeats(false);
+            timer.start();
+        } else {
+            showError("Nothing to redo!");
+        }
+    }
+
+    /**
+     * Handles save game button click.
+     */
+    private void handleSaveGame() {
+        if (controller.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            showError("Can only save during active game!");
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Game");
+        fileChooser.setSelectedFile(new File("uno_save.dat"));
+
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (controller.saveGame(file.getAbsolutePath())) {
+                logAction("Game saved to " + file.getName());
+                JOptionPane.showMessageDialog(this,
+                        "Game saved successfully!",
+                        "Save Complete",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                showError("Failed to save game!");
+            }
+        }
+    }
+
+    /**
+     * Handles load game button click.
+     */
+    private void handleLoadGame() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Loading will discard current game. Continue?",
+                "Confirm Load",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Load Game");
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (controller.loadGame(file.getAbsolutePath())) {
+                actionLogArea.setText("");
+                logAction("Game loaded from " + file.getName());
+                showGamePanel();
+                updateFullView();
+                JOptionPane.showMessageDialog(this,
+                        "Game loaded successfully!",
+                        "Load Complete",
+                        JOptionPane.INFORMATION_MESSAGE);
+                checkAndProcessAI();
+            } else {
+                showError("Failed to load game!");
+            }
+        }
+    }
+
+    /**
+     * Updates undo/redo button states.
+     */
+    private void updateUndoRedoButtons() {
+        undoButton.setEnabled(controller.canUndo() && !controller.isPlayerAI());
+        redoButton.setEnabled(controller.canRedo() && !controller.isPlayerAI());
+    }
+
 
     /**
      * Checks if the current player is an AI player and processes the AI turn
@@ -609,6 +803,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                 controller.isPendingDrawColourSelection()) &&
                 !controller.isPlayerAI();
         colorSelectionPanel.setVisible(showColorPanel);
+
+        updateUndoRedoButtons();
     }
 
     /**
@@ -656,6 +852,46 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         }
         playerHandPanel.revalidate();
         playerHandPanel.repaint();
+    }
+
+    /**
+     * Updates the timer display
+     */
+    private void updateTimerDisplay() {
+        boolean timedMode = controller.isTimeModeEnabled();
+        Uno_Model.GameStatus status = controller.getGameStatus();
+
+        // Only show and process the timer if the game is active and timed mode is enabled
+        if (status == Uno_Model.GameStatus.IN_PROGRESS && timedMode) {
+            int remainingTime = controller.getRemainingTurnTime();
+            timerLabel.setVisible(true);
+
+            if (remainingTime > 0) {
+                // Display remaining time, turn red for the last 5 seconds
+                timerLabel.setText("Time: " + remainingTime + "s");
+                timerLabel.setForeground(remainingTime <= 5 ? Color.RED : Color.WHITE);
+            } else if (remainingTime == 0) {
+                timerLabel.setText("Time: EXPIRED");
+                timerLabel.setForeground(Color.RED);
+
+                // If time has expired and it's a human player's turn, force the timeout action
+                if (!controller.isPlayerAI()) {
+                    // handleTurnTimeout() makes the player draw a card and advances the turn
+                    Uno_Model.TurnAction action = controller.handleTurnTimeout();
+                    if (action == Uno_Model.TurnAction.TIME_EXPIRED) {
+                        logAction(controller.getCurrentPlayer().getName() + "'s turn expired! Drew card and passed.");
+                    }
+                }
+            } else {
+                // remainingTime is -1 (timed mode enabled but timer not running, e.g., initial turn state)
+                timerLabel.setText("Time: --s");
+                timerLabel.setForeground(Color.WHITE);
+            }
+        } else {
+            // Not in progress or timed mode disabled: hide/reset display
+            timerLabel.setText("Time: --s");
+            timerLabel.setVisible(false);
+        }
     }
 
     /**
@@ -720,6 +956,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     @Override
     public void handleGameUpdate(Uno_Event event) {
         updateFullView();
+        updateUndoRedoButtons();
         // Trigger AI processing after view update
         SwingUtilities.invokeLater(() -> checkAndProcessAI());
     }
@@ -732,6 +969,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         logAction("Round ended! Check scores.");
         newRoundButton.setVisible(true);
         newGameButton.setVisible(true);
+        undoButton.setEnabled(false);
+        redoButton.setEnabled(false);
     }
 
     /**
@@ -747,6 +986,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         }
         newRoundButton.setVisible(false);
         newGameButton.setVisible(true);
+        undoButton.setEnabled(false);
+        redoButton.setEnabled(false);
     }
 
     /**
