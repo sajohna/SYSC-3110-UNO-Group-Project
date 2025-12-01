@@ -1,3 +1,5 @@
+import java.io.Serializable;
+
 /**
  * Model class representing an UNO card with its value and colour
  * Manages the properties and behaviors of individual UNO cards.
@@ -47,7 +49,7 @@
  * @version 3.0 - Milestone 3
  */
 
-public class Card_Model {
+public class Card_Model implements Serializable {
     /**
      * Enum for the different colours of Uno cards
      */
@@ -191,7 +193,7 @@ public class Card_Model {
 
     /**
      * Checks if the given colour belongs to the light side
-     * @param color the colour to check
+     * @param colour the colour to check
      * @return boolean indicaitng if the colour is a light side colour
      */
     public static boolean isLightSideColour(CardColour colour) {
@@ -200,7 +202,7 @@ public class Card_Model {
 
     /**
      * Checks if the given colour belongs to the dark side
-     * @param color the colour to check
+     * @param colour the colour to check
      * @return boolean indicaitng if the colour is a dark side colour
      */
     public static boolean isDarkSideColour(CardColour colour) {

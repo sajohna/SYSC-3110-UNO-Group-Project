@@ -1,7 +1,10 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+
 
 /**
  * This class represents the Controller for UNO game
@@ -12,18 +15,31 @@ import java.util.List;
  *         * Dynamic number of views that can register recevie game updates
  *         * Sequential iteration when notifyin views of game events
  *         * efficeint additon of new view handlers
+ *     - Stack<Uno_GameState> stackUNDO: Stack storing the game states of the uno game
+ *        * Order objects as Last in first out which is needed for UNDOing the last game state
+ *        * efficeint addition of new game states
+ *        * easy access of to most recent game states
+ *     - Stack<Uno_GameState> stackREDO: Stack storing the game states of the uno game
+ *        * Order objects as Last in first out which is needed for UNDOing the last game state
+ *        * efficeint addition of new game states
+ *        * easy access of to most recent game states
  *
  * @author Lasya Erukulla
- * @version 2.0 Milestone 2
+ * @version 4.0 - Milestone 4 + 5
  */
 public class Uno_Controller implements ActionListener {
     private Uno_Model uno;
     private List<Uno_ViewHandler> handlers;
+    private Stack<Uno_GameState> stackUNDO;
+    private Stack<Uno_GameState> stackREDO;
+    private static final int MAX_UNO_NUM = 50;
 
     /* Constructor */
     public Uno_Controller(Uno_Model uno) {
         this.uno = uno;
         handlers = new ArrayList<>();
+        this.stackUNDO = new Stack<>();
+        this.stackREDO = new Stack<>();
     }
 
     /* Add View handlers to the handlers list
@@ -69,6 +85,7 @@ public class Uno_Controller implements ActionListener {
      */
     public void initializeGame(){
         uno.initializeGame();
+        clearUndoRedoHistory();
         notifyGameUpdate();
     }
 
@@ -77,6 +94,7 @@ public class Uno_Controller implements ActionListener {
      */
     public void startNewRound() {
         uno.startNewRound();
+        clearUndoRedoHistory();
         notifyGameUpdate();
     }
 
@@ -85,7 +103,44 @@ public class Uno_Controller implements ActionListener {
      */
     public void resetGame() {
         uno.resetGame();
+        clearUndoRedoHistory();
         notifyGameUpdate();
+    }
+
+    /**
+     * Save a game to a file
+     * @param gameName the file to save the game to
+     * @return true if save was successful
+     */
+    public boolean saveGame(String gameName){
+        try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(gameName))){
+            out.writeObject(uno);
+            return true;
+        }catch (IOException e){
+            System.err.println("Error saving game: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Load a game from a file
+     * 
+     * @param gameName the game fiel to load from
+     * @return true if load was successful
+     */
+    public boolean loadGame(String gameName){
+        try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(gameName))){
+            Uno_Model newModelLoaded = (Uno_Model) in.readObject();
+            this.uno = newModelLoaded;
+            clearUndoRedoHistory();
+            notifyGameUpdate();
+            return true;
+        }catch (IOException | ClassNotFoundException e){
+            System.err.println("Error loading game: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -162,6 +217,7 @@ public class Uno_Controller implements ActionListener {
         if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return;
         }
+        saveGameStateForUndo();
         uno.drawCard();
         notifyGameUpdate();
     }
@@ -177,8 +233,25 @@ public class Uno_Controller implements ActionListener {
         if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return;
         }
+        saveGameStateForUndo();
         uno.advanceToNextTurn();
         notifyGameUpdate();
+    }
+
+    /**
+     * Handle the turn timeout
+     * @return true if time expired
+     */
+    public boolean handleTurnTimeout(){
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            return false;
+        }
+        Uno_Model.TurnAction res = uno.handleTurnTimeout();
+        if(res == Uno_Model.TurnAction.TIME_EXPIRED){
+            notifyGameUpdate();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -194,7 +267,7 @@ public class Uno_Controller implements ActionListener {
         if (isPendingColourSelection() || isPendingDrawColourSelection()){
             return false;
         }
-
+        saveGameStateForUndo();
         Uno_Model.TurnAction result = uno.playCard(cardIndex);
         if(result == Uno_Model.TurnAction.CARD_PLAYED){
             notifyGameUpdate();
@@ -218,6 +291,7 @@ public class Uno_Controller implements ActionListener {
         if (!isPendingColourSelection() && !isPendingDrawColourSelection()){
             return false;
         }
+        saveGameStateForUndo();
         boolean result = uno.setActiveColour(colour);
         if(result){
             notifyGameUpdate();
@@ -284,7 +358,72 @@ public class Uno_Controller implements ActionListener {
         }
     }
 
+    /**
+     * Save the current game state before UNDO
+     */
+    public void saveGameStateForUndo(){
+        if (uno.getGameStatus() != Uno_Model.GameStatus.IN_PROGRESS) {
+            return;
+        }
+        Uno_GameState currentState = new Uno_GameState(uno);
+        stackUNDO.push(currentState);
+        if(stackUNDO.size() > MAX_UNO_NUM){
+            stackUNDO.remove(0);
+        }
+        stackREDO.clear();
+    }
+    
+    /**
+     * Undo the last action(state)
+     * @return true if undo is successful
+     */
+    public boolean undoGameState() {
+        if(canUndo()){
+            Uno_GameState currentState = new Uno_GameState(uno);
+            stackREDO.push(currentState);
+
+            Uno_GameState prevState = stackUNDO.pop();
+            prevState.restoreToModel(uno);
+
+            notifyGameUpdate();
+            return true;
+        }
+        return false;        
+    }
+
+    /**
+     * Redo the last action(state)
+     * @return true if redo is successful
+     */
+    public boolean redoGameState() {
+        if (canRedo()){
+            Uno_GameState currentState = new Uno_GameState(uno);
+            stackUNDO.push(currentState);
+
+            Uno_GameState nextState = stackREDO.pop();
+            nextState.restoreToModel(uno);
+
+            notifyGameUpdate();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Clears the undo and redo stack
+     */
+    public void clearUndoRedoHistory(){
+        stackREDO.clear();
+        stackUNDO.clear();
+    }
+
     /* Getters for different game attributes */
+    /**
+     * Gets the uno model
+     */
+    public Uno_Model getUnoModel(){
+        return uno;
+    }
     /**
      * Get the current player in the UNO game
      * @return Player_Model the current player object
@@ -390,6 +529,81 @@ public class Uno_Controller implements ActionListener {
      */
     public boolean isDarkSide(){
         return uno.isDarkSide();
+    }
+
+    /**
+     * Check if undo is allowed
+     * @return true if undo is allowed
+     * */
+    public boolean canUndo(){
+        return !stackUNDO.isEmpty() && 
+            uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
+    }
+
+    /**
+     * Check if redo is allowed
+     * @return true if redo is allowed
+     * */
+    public boolean canRedo(){
+        return !stackREDO.isEmpty() && 
+            uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
+    }
+
+    /**Timed mode methods**/
+    /**
+     * Set time mode to enabled or disabled
+     * 
+     * @param enabled boolean true if enable timed mode
+     * @return true if setting was changed successfully
+     * */
+    public boolean setTimeModeEnabled(boolean enabled) {
+        return uno.setTimedModeEnabled(enabled);
+    }
+
+    /**
+     * Check if the time mode is enabled
+     * 
+     * @return true is timed mode is enabled
+     * */
+    public boolean isTimeModeEnabled() {
+        return uno.isTimedModeEnabled();
+    }
+
+    /**
+     * Set the turn time limit in seconds
+     * 
+     * @param secs the time limit to set
+     * @return true if setting was changed successfully
+     */
+    public boolean setTurnTimeLimit(int secs){
+        return uno.setTurnTimeLimit(secs);
+    }
+
+    /**
+    * Get the turn time limit in seconds
+    * 
+    * @return the turn time limit
+    * */
+    public int getTurnTimeLimit(){
+        return uno.getTurnTimeLimit();
+    }
+
+    /**
+    * Get remaining turn time for the current turn
+    * 
+    * @return remaining time in seconds or -1 if time mode is disabled
+    * */
+    public int getRemainingTurnTime(){
+        return uno.getRemainingTurnTime();
+    }
+
+    /**
+    * Check if the turn time is expired
+    * 
+    * @return true if the the turn time is expired
+    * */
+    public boolean isTurnTimeExpired(){
+        return uno.isTurnTimeExpired();
     }
 
 }

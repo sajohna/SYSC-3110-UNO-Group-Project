@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -38,9 +39,10 @@ import java.util.Collections;
  * 
  * 
  * @author Lasya Erukulla
- * @version 3.0 - Milestone 3
+ * @version 4.0 - Milestone 4
  */
-public class Deck_Model {
+public class Deck_Model implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private ArrayList<Card_Model> drawPile;
     private ArrayList<Card_Model> discardPile;
