@@ -208,27 +208,15 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         saveLoadPanel.add(loadButton);
 
         bottomPanel.removeAll();
-        bottomPanel.setLayout(new BorderLayout(10, 5));
-
-        JPanel mainControlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
-        mainControlsPanel.setBackground(new Color(60, 179, 113));
-        mainControlsPanel.add(drawCardButton);
-        mainControlsPanel.add(nextTurnButton);
-        mainControlsPanel.add(newRoundButton);
-        mainControlsPanel.add(newGameButton);
-
-        JPanel auxiliaryPanel = new JPanel(new GridLayout(2, 1, 5, 5));
-        auxiliaryPanel.setBackground(new Color(60, 179, 113));
-        auxiliaryPanel.add(undoRedoPanel);
-        auxiliaryPanel.add(saveLoadPanel);
-
-        bottomPanel.add(mainControlsPanel, BorderLayout.CENTER);
-        bottomPanel.add(auxiliaryPanel, BorderLayout.SOUTH);
-
+        bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
         bottomPanel.add(drawCardButton);
         bottomPanel.add(nextTurnButton);
         bottomPanel.add(newRoundButton);
         bottomPanel.add(newGameButton);
+        bottomPanel.add(undoButton);
+        bottomPanel.add(redoButton);
+        bottomPanel.add(saveButton);
+        bottomPanel.add(loadButton);
 
         rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
