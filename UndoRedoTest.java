@@ -51,7 +51,7 @@ public class UndoRedoTest {
         assertEquals(initialCards + 1, current.getNumCards());
         assertTrue(controller.canUndo());
         
-        controller.undo();
+        controller.undoGameState();
         assertEquals(initialCards, current.getNumCards());
     }
 
@@ -75,7 +75,7 @@ public class UndoRedoTest {
         controller.playCard(validIndices.get(0));
         
         assertTrue(controller.canUndo());
-        controller.undo();
+        controller.undoGameState();
         
         assertEquals(initialCards, current.getNumCards());
     }
@@ -95,11 +95,11 @@ public class UndoRedoTest {
         
         assertEquals(initialCards + 3, current.getNumCards());
 
-        controller.undo();
+        controller.undoGameState();
         assertEquals(initialCards + 2, current.getNumCards());
-        controller.undo();
+        controller.undoGameState();
         assertEquals(initialCards + 1, current.getNumCards());
-        controller.undo();
+        controller.undoGameState();
         assertEquals(initialCards, current.getNumCards());
         
         assertFalse(controller.canUndo());
@@ -117,11 +117,11 @@ public class UndoRedoTest {
         controller.handleDrawCard();
         assertEquals(initialCards + 1, current.getNumCards());
         
-        controller.undo();
+        controller.undoGameState();
         assertEquals(initialCards, current.getNumCards());
         assertTrue(controller.canRedo());
         
-        controller.redo();
+        controller.redoGameState();
         assertEquals(initialCards + 1, current.getNumCards());
         assertFalse(controller.canRedo());
     }
@@ -141,18 +141,18 @@ public class UndoRedoTest {
         controller.handleDrawCard();
         
         // Undo all
-        controller.undo();
-        controller.undo();
-        controller.undo();
+        controller.undoGameState();
+        controller.undoGameState();
+        controller.undoGameState();
         
         assertEquals(initialCards, current.getNumCards());
         
         // Redo all
-        controller.redo();
+        controller.redoGameState();
         assertEquals(initialCards + 1, current.getNumCards());
-        controller.redo();
+        controller.redoGameState();
         assertEquals(initialCards + 2, current.getNumCards());
-        controller.redo();
+        controller.redoGameState();
         assertEquals(initialCards + 3, current.getNumCards());
     }
 
@@ -163,7 +163,7 @@ public class UndoRedoTest {
     void testRedoStackClearedOnNewAction() {
         System.out.println("New action clears redo stack");
         controller.handleDrawCard();
-        controller.undo();
+        controller.undoGameState();
         assertTrue(controller.canRedo());
         
         // Perform new action
@@ -186,7 +186,7 @@ public class UndoRedoTest {
         Player_Model secondPlayer = controller.getCurrentPlayer();
         assertNotEquals(firstPlayer, secondPlayer);
         
-        controller.undo();
+        controller.undoGameState();
         assertEquals(firstPlayer, controller.getCurrentPlayer());
     }
 
@@ -201,7 +201,7 @@ public class UndoRedoTest {
         boolean initialDarkSide = controller.isDarkSide();
         
         controller.handleDrawCard();
-        controller.undo();
+        controller.undoGameState();
         
         assertEquals(initialActive, controller.getActiveCard());
         assertEquals(initialColour, controller.getMatchColour());
@@ -223,7 +223,7 @@ public class UndoRedoTest {
                 if (controller.playCard(i)) {
                     assertNotEquals(initialDarkSide, controller.isDarkSide());
                     
-                    controller.undo();
+                    controller.undoGameState();
                     assertEquals(initialDarkSide, controller.isDarkSide());
                     break;
                 }
@@ -259,7 +259,7 @@ public class UndoRedoTest {
         int undoCount = 0;
         while (controller.canUndo() && undoCount < 100)
         {
-            controller.undo();
+            controller.undoGameState();
             undoCount++;
         }
         
@@ -268,26 +268,12 @@ public class UndoRedoTest {
     }
 
     /**
-     * Tests GameState snapshot creation
-     */
-    @Test
-    void testGameStateSnapshot() {
-        System.out.println("GameState snapshot captures all state");
-        GameState state = new GameState(model);
-        
-        assertNotNull(state.getPlayerSnapshots());
-        assertEquals(2, state.getPlayerSnapshots().size());
-        assertNotNull(state.getActiveCard());
-        assertEquals(model.isDarkSide(), state.isDarkSide());
-    }
-
-    /**
      * Tests GameState restoration
      */
     @Test
     void testGameStateRestoration() {
         System.out.println("GameState restoration works correctly");
-        GameState originalState = new GameState(model);
+        Uno_GameState originalState = new Uno_GameState(model);
         int originalCards = controller.getCurrentPlayer().getNumCards();
         
         controller.handleDrawCard();

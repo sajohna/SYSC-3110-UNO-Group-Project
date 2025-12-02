@@ -523,7 +523,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             return;
         }
 
-        if (controller.undo()) {
+        if (controller.undoGameState()) {
             logAction("Action undone");
             undoRedoStatusLabel.setText("Undone");
             Timer timer = new Timer(2000, e -> undoRedoStatusLabel.setText(""));
@@ -543,7 +543,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             return;
         }
 
-        if (controller.redo()) {
+        if (controller.redoGameState()) {
             logAction("Action redone");
             undoRedoStatusLabel.setText("Redone");
             Timer timer = new Timer(2000, e -> undoRedoStatusLabel.setText(""));
@@ -875,10 +875,9 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                 timerLabel.setForeground(Color.RED);
 
                 // If time has expired and it's a human player's turn, force the timeout action
+                boolean expired = controller.handleTurnTimeout();
                 if (!controller.isPlayerAI()) {
-                    // handleTurnTimeout() makes the player draw a card and advances the turn
-                    Uno_Model.TurnAction action = controller.handleTurnTimeout();
-                    if (action == Uno_Model.TurnAction.TIME_EXPIRED) {
+                    if (expired) {
                         logAction(controller.getCurrentPlayer().getName() + "'s turn expired! Drew card and passed.");
                     }
                 }
