@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
  *         * Hierarchical organization of UI components
  *         * Different layout managers (BorderLayout, FlowLayout, BoxLayout, GridLayout)
  *
+ *
  * @author Lucas Baker
  * @version 4.0 - Milestone 4
  */
@@ -44,7 +45,6 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
     private JButton startGameButton;
     private JComboBox<String>[] playerTypeBoxes;
     private JTextField[] playerNameFields;
-    private int selectedPlayerCount = 2;
     private Timer aiTimer;
     private JTextArea actionLogArea;
     private JButton undoButton;
@@ -312,6 +312,43 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         setupPanel.add(setupLabel);
         setupPanel.add(Box.createVerticalStrut(20));
         setupPanel.add(playerConfigPanel);
+
+
+        // Initialize Checkbox
+        timedModeCheckBox = new JCheckBox("Enable Turn Timer");
+        timedModeCheckBox.setBackground(new Color(34, 139, 34));
+        timedModeCheckBox.setForeground(Color.WHITE);
+        timedModeCheckBox.setFont(new Font("Arial", Font.PLAIN, 16));
+        timedModeCheckBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Initialize Time Limit Spinner (Default 30s, min 10s, max 60s, step 5s)
+        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(30, 10, 60, 5);
+        timeLimitSpinner = new JSpinner(spinnerModel);
+        ((JSpinner.DefaultEditor) timeLimitSpinner.getEditor()).getTextField().setEditable(false);
+        timeLimitSpinner.setPreferredSize(new Dimension(80, 30));
+        timeLimitSpinner.setMaximumSize(new Dimension(80, 30));
+
+        JLabel limitLabel = new JLabel("Time Limit (s):");
+        limitLabel.setForeground(Color.WHITE);
+
+        JPanel timePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        timePanel.setBackground(new Color(34, 139, 34));
+        timePanel.add(limitLabel);
+        timePanel.add(timeLimitSpinner);
+        timePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Initial state: hide time limit spinner
+        timePanel.setVisible(false);
+
+        // Add listener to show/hide spinner when checkbox is toggled
+        timedModeCheckBox.addActionListener(e -> timePanel.setVisible(timedModeCheckBox.isSelected()));
+
+        // Add to setupPanel
+        setupPanel.add(Box.createVerticalStrut(20)); // Strut to separate from player config
+        setupPanel.add(timedModeCheckBox);
+        setupPanel.add(timePanel);
+
+
         setupPanel.add(Box.createVerticalStrut(30));
         setupPanel.add(startGameButton);
         setupPanel.add(Box.createVerticalGlue());
@@ -383,6 +420,17 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         }
 
         controller.createPlayersWithConfig(isAIList, names);
+
+
+        boolean timedMode = timedModeCheckBox.isSelected();
+        int timeLimit = (int) timeLimitSpinner.getValue();
+
+        controller.setTimeModeEnabled(timedMode);
+        if (timedMode) {
+            controller.setTurnTimeLimit(timeLimit);
+        }
+
+
         controller.initializeGame();
         showGamePanel();
         updateFullView();
