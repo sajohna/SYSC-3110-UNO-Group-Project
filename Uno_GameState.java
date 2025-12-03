@@ -80,19 +80,20 @@ public class Uno_GameState implements Serializable{
         public int numCards;
         public boolean isAI;
         public Player_Model.AIStrategy aiStrategy;
+
         public PlayerStateShots(Player_Model player){
             this.name = player.getName();
-            this.hand = player.getHand();
+            this.hand = new ArrayList<>(player.getHand());
             this.score = player.getScore();
             this.numCards = player.getNumCards();
-            this.isAI =player.isAI();
+            this.isAI = player.isAI();
             this.aiStrategy = player.getAIStrategy();
         }
     }
 
     /**
      * Constructore to save current game state
-     * 
+     *
      * @param uno the uno model that needs to be saved
      */
     public Uno_GameState(Uno_Model uno){
