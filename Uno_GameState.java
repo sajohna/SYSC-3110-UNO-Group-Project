@@ -131,9 +131,8 @@ public class Uno_GameState implements Serializable{
             PlayerStateShots playerState = playerStateShots.get(i);
             Player_Model participant = participants.get(i);
             participant.getHand().clear();
-            for(Card_Model card: playerState.hand){
-                participant.addCard(card);
-            }
+            participant.getHand().addAll(playerState.hand);
+            participant.setNumCards(playerState.numCards);
             participant.setScore(playerState.score);
         }
 

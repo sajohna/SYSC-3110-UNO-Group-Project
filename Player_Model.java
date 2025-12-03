@@ -137,6 +137,13 @@ public class Player_Model {
     public void setName(String name) { this.name = name; }
 
     /**
+     * Sets number of cards on hand of the player.
+     * @param numCards
+     * The number of cards on hand for the player
+     */
+    public void setNumCards(int numCards) { this.numCards = numCards; }
+
+    /**
      * Sets if player is AI.
      * @param isAI
      * Whether player is AI or not.
