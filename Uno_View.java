@@ -440,8 +440,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
             logAction("Game started! " + currentPlayer.getName() + "'s turn.");
         }
 
-        // Use invokeLater to ensure UI is fully updated before AI starts
-        SwingUtilities.invokeLater(() -> checkAndProcessAI());
+        // AI turn is now initiated by user clicking Next Turn if it's the AI's first turn
     }
 
     /**
@@ -466,18 +465,23 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles next turn action.
      */
     private void handleNextTurn() {
-        if (controller.isPlayerAI()) {
-            showError("AI is playing! Please wait.");
+
+        if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS && controller.isPlayerAI()) {
+            nextTurnButton.setEnabled(false); // Disable while AI plays
+            logAction(controller.getCurrentPlayer().getName() + " (AI) turn started by user click.");
+            checkAndProcessAI();
             return;
         }
+
+
         if (controller.isPendingColourSelection() || controller.isPendingDrawColourSelection()) {
             showError("Please select a color first!");
             return;
         }
+
         controller.handleNextPlayer();
         nextTurnButton.setEnabled(false);
         logAction("Now it's " + controller.getCurrentPlayer().getName() + "'s turn!");
-        checkAndProcessAI();
     }
 
     /**
@@ -491,8 +495,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         actionLogArea.setText("");
         logAction("New round started!");
 
-        // Use invokeLater to ensure UI is fully updated before AI starts
-        SwingUtilities.invokeLater(() -> checkAndProcessAI());
+        // AI turn is now initiated by user clicking Next Turn.
     }
 
     /**
@@ -544,7 +547,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         if (success) {
             logAction(controller.getCurrentPlayer().getName() + " chose color: " + color + ".");
             nextTurnButton.setEnabled(true);
-            checkAndProcessAI();
+
         } else {
             showError("Invalid color for current side!");
         }
@@ -554,11 +557,6 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles undo button click.
      */
     private void handleUndo() {
-        if (controller.isPlayerAI()) {
-            showError("Cannot undo during AI turn!");
-            return;
-        }
-
         if (controller.undoGameState()) {
             logAction("Action undone");
             undoRedoStatusLabel.setText("Undone");
@@ -574,11 +572,6 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Handles redo button click.
      */
     private void handleRedo() {
-        if (controller.isPlayerAI()) {
-            showError("Cannot redo during AI turn!");
-            return;
-        }
-
         if (controller.redoGameState()) {
             logAction("Action redone");
             undoRedoStatusLabel.setText("Redone");
@@ -646,7 +639,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                         "Game loaded successfully!",
                         "Load Complete",
                         JOptionPane.INFORMATION_MESSAGE);
-                checkAndProcessAI();
+                // AI turn is now initiated by user clicking Next Turn.
             } else {
                 showError("Failed to load game!");
             }
@@ -657,8 +650,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      * Updates undo/redo button states.
      */
     private void updateUndoRedoButtons() {
-        undoButton.setEnabled(controller.canUndo() && !controller.isPlayerAI());
-        redoButton.setEnabled(controller.canRedo() && !controller.isPlayerAI());
+        undoButton.setEnabled(controller.canUndo());
+        redoButton.setEnabled(controller.canRedo());
     }
 
 
@@ -718,15 +711,22 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                     updateFullView();
 
                     // Continue processing if still AI's turn
+                    // This internal recursive call is needed because AI might need multiple steps (e.g., color selection)
                     if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS &&
                             controller.isPlayerAI()) {
                         checkAndProcessAI();
                     } else {
+                        // AI turn is completely over, and it's either a Human's turn or the game ended.
                         setControlsEnabled(true);
                         if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
                             Player_Model nextPlayer = controller.getCurrentPlayer();
                             if (nextPlayer != null && !nextPlayer.isAI()) {
                                 logAction("It's now " + nextPlayer.getName() + "'s turn!");
+                                nextTurnButton.setEnabled(false); // Start of human turn, pass button is disabled.
+                            } else if (nextPlayer != null && nextPlayer.isAI()) {
+                                // If the chain of AI moves unexpectedly stops on an AI, enable button for user to resume.
+                                nextTurnButton.setEnabled(true);
+                                logAction("It's now " + nextPlayer.getName() + " (AI)'s turn. Press 'Next Turn' to continue.");
                             }
                         }
                     }
@@ -748,7 +748,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
      */
     private void setControlsEnabled(boolean enabled) {
         drawCardButton.setEnabled(enabled);
-        nextTurnButton.setEnabled(enabled && nextTurnButton.isEnabled());
+        // The state of nextTurnButton is managed separately by action handlers and handleGameUpdate
         for (JButton btn : cardButtons) btn.setEnabled(enabled);
         redButton.setEnabled(enabled);
         blueButton.setEnabled(enabled);
@@ -758,6 +758,12 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         purpleButton.setEnabled(enabled);
         pinkButton.setEnabled(enabled);
         orangeButton.setEnabled(enabled);
+
+        // Only show color selection if human player needs to choose
+        boolean showColorPanel = (controller.isPendingColourSelection() ||
+                controller.isPendingDrawColourSelection()) &&
+                !controller.isPlayerAI();
+        colorSelectionPanel.setVisible(showColorPanel);
     }
 
     /**
@@ -822,7 +828,7 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                 // Show placeholder for AI hand
                 playerHandPanel.removeAll();
                 cardButtons.clear();
-                JLabel aiHandLabel = new JLabel("AI Player - " + currentPlayer.getNumCards() + " cards (Playing...)");
+                JLabel aiHandLabel = new JLabel("AI Player - " + currentPlayer.getNumCards() + " cards (Waiting for click...)");
                 aiHandLabel.setForeground(Color.CYAN);
                 aiHandLabel.setFont(new Font("Arial", Font.BOLD, 16));
                 playerHandPanel.add(aiHandLabel);
@@ -834,11 +840,8 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         updateScores();
         updateColorButtons(dark);
 
-        // Only show color selection if human player needs to choose
-        boolean showColorPanel = (controller.isPendingColourSelection() ||
-                controller.isPendingDrawColourSelection()) &&
-                !controller.isPlayerAI();
-        colorSelectionPanel.setVisible(showColorPanel);
+        // Color panel visibility is now handled within setControlsEnabled to ensure it is hidden for AI
+        setControlsEnabled(!controller.isPlayerAI());
 
         updateUndoRedoButtons();
     }
@@ -972,28 +975,50 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
                     .append(": ").append(player.getScore()).append(" pts\n");
         }
         sb.append("\n=== CARDS IN HAND ===\n\n");
+        
+        Player_Model currentPlayer = controller.getCurrentPlayer();
+        if (currentPlayer != null) {
+            sb.append(currentPlayer.getName())
+                    .append(currentPlayer.isAI() ? " (AI)" : "")
+                    .append(": ").append(currentPlayer.getNumCards()).append(" cards\n");
+        }
         for (Player_Model player : controller.getParticipants()) {
-            sb.append(player.getName()).append(": ").append(player.getNumCards()).append(" cards\n");
+            if (player != currentPlayer) {
+                sb.append(player.getName())
+                        .append(player.isAI() ? " (AI)" : "")
+                        .append(": ").append(player.getNumCards()).append(" cards\n");
+            }
         }
         gameStateArea.setText(sb.toString());
     }
 
+
     /**
-     * Displays an error message.
+     * Displays an error message to the user.
      */
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
-     * Handles game state update events from the controller.
+     * Handles game state update events.
      */
     @Override
     public void handleGameUpdate(Uno_Event event) {
         updateFullView();
         updateUndoRedoButtons();
-        // Trigger AI processing after view update
-        SwingUtilities.invokeLater(() -> checkAndProcessAI());
+
+        // Logic to enforce the "Next Turn" requirement for AI
+        if (controller.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
+            if (controller.isPlayerAI()) {
+                // It's the AI's turn, waiting for user trigger
+                setControlsEnabled(false);
+                nextTurnButton.setEnabled(true);
+            } else {
+                // It's a human's turn. setControlsEnabled(true) is managed elsewhere.
+                // Next Turn button state (enabled after draw/play, disabled otherwise) is maintained by action handlers.
+            }
+        }
     }
 
     /**
