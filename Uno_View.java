@@ -25,7 +25,7 @@ import java.awt.event.ActionListener;
  *         * Hierarchical organization of UI components
  *         * Different layout managers (BorderLayout, FlowLayout, BoxLayout, GridLayout)
  *
- *
+ * Timer functionality: Note we are aware the timer says "tim e" instead of time. Not sure how to fix this issue - but its not a code problem.
  * @author Lucas Baker
  * @version 4.0 - Milestone 4
  */
