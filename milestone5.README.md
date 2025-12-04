@@ -3,7 +3,8 @@
 This README provides an overview of the Uno game, its components, and how to play it.
 
 ## SPECIAL NOTE
-Milestone 5 was completed before milestone 4
+Milestone 5 was completed before milestone 4. This README.md is only for milestone 5
+
 ## Introduction
 Uno is a popular card game where the goal is to be the first player to get rid of all the cards in their hand by matching the colour, number or symbol of the previously played card. In this simulated UNO game, the objective of this version is to be the first player to reach 500 points. This newest implementation of the game adds the UNO Flip feature. The game now includes:
 - GUI built with SWING
@@ -64,7 +65,7 @@ Finally, the round ends when one player runs out of cards.
 That player’s score increases by the total value of all other players’ remaining cards.
 The next round automatically begins.
 
-## special actions
+## Special actions
 
 Reverse: Reverses the play direction.
 Skip: Skips the next player’s turn.
@@ -74,7 +75,7 @@ Wild Draw Two: Player chooses the next colour, next player draws two cards.
 Wild Draw Colour: (Dark side) Next player draws until the chosen color appears 
 Flip: Switches the game to the opposite side (Light ↔ Dark) 
 
-## milestone 5 Bonus
+## Milestone 5 Bonus
 For milestone 5, the bonus feature we decided to implement was feature 2 - Timed Mode.
 The main places in the code this was implemented was in Uno_Controller.
 There, the timed mode can be enabled or disabled, the time limit can be retrieved, the 

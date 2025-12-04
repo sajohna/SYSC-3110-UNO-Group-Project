@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +19,9 @@ import java.util.List;
  * - AIStrategy aiStrategy: Stores which strategy the AI will use
  *
  * @author Lucas Baker
- * @version 3.0 - Milestone 3
+ * @version 4.0 - Milestone 4
  */
-public class Player_Model {
+public class Player_Model implements Serializable {
     private String name;
     private ArrayList<Card_Model> hand;
     private int score;

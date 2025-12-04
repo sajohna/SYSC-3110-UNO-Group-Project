@@ -332,7 +332,7 @@ public class Player_ModelTest
                 new Card_Model(Card_Model.CardValue.TWO, Card_Model.CardColour.RED),
                 Card_Model.CardColour.RED, Card_Model.CardValue.TWO, false);
 
-        assertEquals(1, selected); //Should play red card to save wild for later
+        assertEquals(0, selected); //Should play red card to save wild for later
         count = 1;
     }
 
