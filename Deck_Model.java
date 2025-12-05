@@ -42,7 +42,7 @@ import java.util.Collections;
  * @version 4.0 - Milestone 4
  */
 public class Deck_Model implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long SERIAL_VERSION_UID = 1L;
 
     private ArrayList<Card_Model> drawPile;
     private ArrayList<Card_Model> discardPile;

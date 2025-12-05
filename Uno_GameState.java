@@ -6,7 +6,7 @@ import java.util.*;
  * This handles saving the game state and restoring the game state
  * 
  * The data types used are the exact same as used in Uno_Model, Player_Model, Deck_Model
- *   - long serialVersionUID: Version identifier for serialization compatibility.
+ *   - long SERIAL_VERSION_UID: Version identifier for serialization compatibility.
  *         * Ensures deserialized objects are compatible with current class definition
  *   - List of PlayerStateShots (participants): Stores players in turn order.
  *       ArrayList chosen for:
@@ -48,7 +48,7 @@ import java.util.*;
  * @version 4.0 - Milestone 4
  */
 public class Uno_GameState implements Serializable{
-    private static final long serialVersionUID = 1L;
+    private static final long SERIAL_VERSION_UID = 1L;
 
     //player state
     private final List<PlayerStateShots> playerStateShots;
@@ -73,7 +73,7 @@ public class Uno_GameState implements Serializable{
      * Insider class to capture player state (Multiple players' state needed to be saved)
      */
     public static class PlayerStateShots implements Serializable{
-        private static final long serialVersionUID = 1L;
+        private static final long SERIAL_VERSION_UID = 1L;
         public String name;
         public ArrayList<Card_Model> hand;
         public int score;

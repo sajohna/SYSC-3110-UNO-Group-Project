@@ -3,7 +3,7 @@ import java.io.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tets suite for Save/Load serializatiob funcitionality
+ * Tets suite for Save/Load serialization funcitionality
  * test game saving, laoding, error handling and state preservations
  *
  * @author Lasya Erukulla
