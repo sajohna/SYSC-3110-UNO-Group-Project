@@ -145,7 +145,7 @@ Rola Elghonimy - UML/Sequence Diagrams and README documentation
 Saan John – Game Logic (Uno_Model.java and associated test files), Turn Timer functionality
 Lasya Erukulla – Controller Logic (Uno_Controller.java, Uno_Event.java, Card_Model.java, Deck_Model.java and associated test files, Uno_GameState.java, SerializationTest.java), Turn Timer controls
 Lucas Baker – View Logic (Uno_View.java, Uno_ViewHandler.java, Player_Model.java and associated test files, UnodRedoTest.java), Turn Timer display
-Rola Elghonimy - UML/Sequence Diagrams and README documentation  
+Rola Elghonimy - UML/Sequence Diagrams, README and other documentation  
 
 ## Techinal Notes
 - Serialization Framework: Game state is serialized using Java's Serialization framework with serialVersionUID for version compatibility
@@ -155,6 +155,6 @@ Rola Elghonimy - UML/Sequence Diagrams and README documentation
 - MVC Architecture: Clean separation between Model (game logic), View (GUI), and Controller (coordination)
 
 ## Known Issues
-- Timer label displaye "tim e" instead of "time" due to a spacing issue in the UI component (cosmetic issue, DOES NOT affect the functionality)
+- Timer label displays "tim e" instead of "time" due to a spacing issue in the UI component (cosmetic issue, DOES NOT affect the functionality and its not a implementation logic issue)
 
 ## Enjoy the Game!
