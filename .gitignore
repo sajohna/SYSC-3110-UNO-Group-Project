@@ -1,6 +1,7 @@
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+.idea/workspace.xml
 lib/apiguardian-api-1.1.2.jar
 lib/junit-jupiter-api-5.8.1.jar
 lib/junit-jupiter-params-5.8.1.jar

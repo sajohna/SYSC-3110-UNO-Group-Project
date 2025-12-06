@@ -48,7 +48,7 @@ This class captures complete game state snapshots for save/load and undo/redo fu
  Uno_Model game = new Uno_Model();
 
 2. Configure game set up
-    - Player Confihuration: Choose between Human, AI or none  for each slot (2–4 total).  
+    - Player Configuration: Choose between Human, AI or none  for each slot (2–4 total).  
     - Enter names or use defaults.
     - Turn  Timer(optional): Check "Enable Turn Timer" and set the limit between 10 to 60 seconds.
 
@@ -79,7 +79,7 @@ AI players cannot be undone by human players
     - Game state is fully preserved including player hands, score, deck state and current turn
     - Note: Loading a game will discard the current game in progress
 2. Undo/Redo Game
-    - Undo: Click the "Uno" button ro reverse the last action
+    - Undo: Click the "Uno" button to reverse the last action
     - Redo: Click the "Redo" button to reapply an undone actoion
     - Up to 50 actions can be undone
     - Undo/Redo is onyl avaiable during an active game
