@@ -29,4 +29,4 @@ loadGame(String fileName) : boolean
 
 These operations use Java I/O streams, specifically ObjectOutputStream to serialize in Uno_Model and ObjectInputStream to restore the saved state. after loading, the controller is able to replace its internal uno model with the deserialized version.
 
-Several classes were also updated to implement Serializable, they included a serial Version UID to maintain compatibility with the saved game files. 
+Several classes were also updated to implement Serializable, they included a serial Version UID to maintain compatibility with the saved game files. For more details, please refer to the class comment of the code file.
