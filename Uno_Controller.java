@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -125,7 +126,7 @@ public class Uno_Controller implements ActionListener {
 
     /**
      * Load a game from a file
-     * 
+     *
      * @param gameName the game fiel to load from
      * @return true if load was successful
      */
@@ -193,7 +194,7 @@ public class Uno_Controller implements ActionListener {
 
     /**
      * Create players for the UNO game and add them to the UNO model
-     * 
+     *
      * @param isAIList: List<Boolean> lsit indicating if the player at the index is an AI or human
      * @param names: List<String> list of names for the player, if null or empty default names will be used
      */
@@ -314,7 +315,7 @@ public class Uno_Controller implements ActionListener {
 
     /**
      * Proces the AI player's turn
-     * 
+     *
      * @return boolean indicating if the AI turn was processed
      */
     public boolean processAITurn(){
@@ -346,13 +347,13 @@ public class Uno_Controller implements ActionListener {
         }
 
     }
-    
+
     /**
      * Process AI turns until it is a human player's turn
      */
     public void processAITurnsUntilHuman() {
-        while (isPlayerAI() && 
-               uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
+        while (isPlayerAI() &&
+                uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS) {
             try { Thread.sleep(500); } catch (InterruptedException e) {}
             processAITurn();
         }
@@ -372,7 +373,7 @@ public class Uno_Controller implements ActionListener {
         }
         stackREDO.clear();
     }
-    
+
     /**
      * Undo the last action(state)
      * @return true if undo is successful
@@ -388,7 +389,7 @@ public class Uno_Controller implements ActionListener {
             notifyGameUpdate();
             return true;
         }
-        return false;        
+        return false;
     }
 
     /**
@@ -536,8 +537,8 @@ public class Uno_Controller implements ActionListener {
      * @return true if undo is allowed
      * */
     public boolean canUndo(){
-        return !stackUNDO.isEmpty() && 
-            uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
+        return !stackUNDO.isEmpty() &&
+                uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
     }
 
     /**
@@ -545,14 +546,14 @@ public class Uno_Controller implements ActionListener {
      * @return true if redo is allowed
      * */
     public boolean canRedo(){
-        return !stackREDO.isEmpty() && 
-            uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
+        return !stackREDO.isEmpty() &&
+                uno.getGameStatus() == Uno_Model.GameStatus.IN_PROGRESS;
     }
 
     /**Timed mode methods**/
     /**
      * Set time mode to enabled or disabled
-     * 
+     *
      * @param enabled boolean true if enable timed mode
      * @return true if setting was changed successfully
      * */
@@ -562,7 +563,7 @@ public class Uno_Controller implements ActionListener {
 
     /**
      * Check if the time mode is enabled
-     * 
+     *
      * @return true is timed mode is enabled
      * */
     public boolean isTimeModeEnabled() {
@@ -571,7 +572,7 @@ public class Uno_Controller implements ActionListener {
 
     /**
      * Set the turn time limit in seconds
-     * 
+     *
      * @param secs the time limit to set
      * @return true if setting was changed successfully
      */
@@ -580,30 +581,41 @@ public class Uno_Controller implements ActionListener {
     }
 
     /**
-    * Get the turn time limit in seconds
-    * 
-    * @return the turn time limit
-    * */
+     * Get the turn time limit in seconds
+     *
+     * @return the turn time limit
+     * */
     public int getTurnTimeLimit(){
         return uno.getTurnTimeLimit();
     }
 
     /**
-    * Get remaining turn time for the current turn
-    * 
-    * @return remaining time in seconds or -1 if time mode is disabled
-    * */
+     * Get remaining turn time for the current turn
+     *
+     * @return remaining time in seconds or -1 if time mode is disabled
+     * */
     public int getRemainingTurnTime(){
         return uno.getRemainingTurnTime();
     }
 
     /**
-    * Check if the turn time is expired
-    * 
-    * @return true if the the turn time is expired
-    * */
+     * Check if the turn time is expired
+     *
+     * @return true if the the turn time is expired
+     * */
     public boolean isTurnTimeExpired(){
         return uno.isTurnTimeExpired();
+    }
+
+    /**
+     * Main method to launch the UNO game GUI.
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Uno_Model model = new Uno_Model();
+            Uno_Controller controller = new Uno_Controller(model);
+            new Uno_View(controller);
+        });
     }
 
 }

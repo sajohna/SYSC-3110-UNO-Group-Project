@@ -1050,14 +1050,4 @@ public class Uno_View extends JFrame implements Uno_ViewHandler {
         redoButton.setEnabled(false);
     }
 
-    /**
-     * Main method to launch the UNO game GUI.
-     */
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Uno_Model model = new Uno_Model();
-            Uno_Controller controller = new Uno_Controller(model);
-            new Uno_View(controller);
-        });
-    }
 }
